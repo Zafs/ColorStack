@@ -6,6 +6,7 @@
   <title>ColorStack Auto Process</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="dist/output.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
   <!-- Spinner -->
@@ -154,12 +155,58 @@
         <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide">My Filaments</h2>
         
         <div class="flex gap-2 items-center">
-          <input type="color" id="newFilamentColor" value="#ffffff" 
-                 class="w-10 h-10 bg-slate-600 border border-slate-500 rounded-lg cursor-pointer transition-all hover:scale-105">
+          <div class="relative">
+            <div id="colorPickerTrigger" class="w-10 h-10 bg-slate-600 border border-slate-500 rounded-lg cursor-pointer transition-all hover:scale-105 flex items-center justify-center">
+              <div id="selectedColor" class="w-6 h-6 rounded-md border border-slate-400"></div>
+            </div>
+            <input type="hidden" id="newFilamentColor" value="#ffffff">
+            <div id="customColorPicker" class="absolute top-full left-0 mt-2 bg-slate-700 border border-slate-600 rounded-lg shadow-xl p-4 z-50 hidden min-w-64">
+              <div class="grid grid-cols-8 gap-2 mb-4">
+                <!-- Predefined colors -->
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff0000" data-color="#ff0000"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff8000" data-color="#ff8000"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ffff00" data-color="#ffff00"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #80ff00" data-color="#80ff00"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #00ff00" data-color="#00ff00"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #00ff80" data-color="#00ff80"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #00ffff" data-color="#00ffff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #0080ff" data-color="#0080ff"></div>
+                
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #0000ff" data-color="#0000ff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #8000ff" data-color="#8000ff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff00ff" data-color="#ff00ff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff0080" data-color="#ff0080"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff4000" data-color="#ff4000"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ffbf00" data-color="#ffbf00"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #80ff80" data-color="#80ff80"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #00ff40" data-color="#00ff40"></div>
+                
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #40ff80" data-color="#40ff80"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #40ffff" data-color="#40ffff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #4080ff" data-color="#4080ff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #4000ff" data-color="#4000ff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #8040ff" data-color="#8040ff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff40ff" data-color="#ff40ff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff4080" data-color="#ff4080"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff8040" data-color="#ff8040"></div>
+                
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ffffff" data-color="#ffffff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #cccccc" data-color="#cccccc"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #999999" data-color="#999999"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #666666" data-color="#666666"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #333333" data-color="#333333"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #000000" data-color="#000000"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #8b4513" data-color="#8b4513"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #a0522d" data-color="#a0522d"></div>
+              </div>
+              <div class="text-sm text-slate-300 mb-2 font-medium">Custom Color:</div>
+              <input type="text" id="customColorInput" placeholder="#ffffff" class="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            </div>
+          </div>
           <button id="addFilamentBtn" class="flex-1 px-3 py-2 bg-slate-600 text-slate-200 text-xs font-medium rounded-lg transition-all hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">Add</button>
         </div>
         
-        <div id="myFilamentsList" class="flex flex-wrap gap-2"></div>
+        <div id="myFilamentsList" class="flex flex-wrap gap-3"></div>
       </div>
 
       <!-- Export Section -->
@@ -228,6 +275,140 @@
     
     #singleLayerToggle:checked::before {
       transform: translateX(16px);
+    }
+
+    /* Filament Icon Styles */
+    .filament-icon {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .filament-icon:hover {
+      transform: scale(1.05);
+    }
+
+    .filament-outer-ring {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--filament-color);
+      border: 3px solid #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .filament-inner-ring {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+    }
+
+    .filament-center-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 1px solid #475569;
+    }
+
+    .filament-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: #f8fafc;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .filament-remove-btn {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: #f8fafc;
+      border: 2px solid #f8fafc;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 1;
+      opacity: 0;
+      transition: all 0.2s ease;
+      transform: scale(0.8);
+    }
+
+    .filament-icon:hover .filament-remove-btn {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .filament-remove-btn:hover {
+      background: #dc2626;
+      transform: scale(1.1);
+    }
+
+    /* Custom Color Picker Styles */
+    #colorPickerTrigger {
+      position: relative;
+      overflow: hidden;
+    }
+
+    #colorPickerTrigger::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, #ff00ff, #ff0080);
+      opacity: 0.1;
+      transition: opacity 0.2s ease;
+    }
+
+    #colorPickerTrigger:hover::before {
+      opacity: 0.2;
+    }
+
+    #selectedColor {
+      position: relative;
+      z-index: 1;
+      transition: all 0.2s ease;
+    }
+
+    #colorPickerTrigger:hover #selectedColor {
+      transform: scale(1.1);
+    }
+
+    /* Color picker input styling */
+    #customColorInput {
+      width: 100%;
+      height: 100%;
+    }
+
+    #customColorInput::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    #customColorInput::-webkit-color-swatch {
+      border: none;
+      border-radius: 0;
+    }
+
+    #customColorInput::-moz-color-swatch {
+      border: none;
+      border-radius: 0;
     }
   </style>
 

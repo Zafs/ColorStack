@@ -114,8 +114,10 @@ function updatePalette() {
     const { paletteDiv } = domElements;
     if (appState.activePalette === 'my') {
         const matchedPalette = matchToPalette(appState.suggestedPalette, appState.myFilaments);
+        appState.currentPalette = matchedPalette; // Store the matched palette
         renderPalette(matchedPalette, paletteDiv, null, true);
     } else {
+        appState.currentPalette = appState.suggestedPalette; // Store the suggested palette
         renderPalette(appState.suggestedPalette, paletteDiv, handleSettingsChange, false);
     }
     handleSettingsChange();
@@ -175,7 +177,92 @@ function invertPalette() {
     }
 }
 
-window.onload = loadMyFilaments;
+function initializeColorPicker() {
+    const selectedColor = document.getElementById('selectedColor');
+    const trigger = document.getElementById('colorPickerTrigger');
+    const colorPicker = document.getElementById('customColorPicker');
+    const customColorInput = document.getElementById('customColorInput');
+    
+    if (!selectedColor || !trigger || !colorPicker) return;
+    
+    // Set initial color
+    updateSelectedColor('#ffffff');
+    customColorInput.value = '#ffffff';
+    
+    // Toggle color picker on trigger click
+    trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        colorPicker.classList.toggle('hidden');
+    });
+    
+    // Close color picker when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!colorPicker.contains(e.target) && !trigger.contains(e.target)) {
+            colorPicker.classList.add('hidden');
+        }
+    });
+    
+    // Handle predefined color clicks
+    const colorSwatches = colorPicker.querySelectorAll('[data-color]');
+    colorSwatches.forEach(swatch => {
+        swatch.addEventListener('click', function() {
+            const color = this.getAttribute('data-color');
+            updateSelectedColor(color);
+            customColorInput.value = color;
+            colorPicker.classList.add('hidden');
+        });
+    });
+    
+    // Handle custom color input
+    customColorInput.addEventListener('input', function() {
+        const color = this.value;
+        if (isValidHexColor(color)) {
+            updateSelectedColor(color);
+        }
+    });
+    
+    // Handle custom color input on enter
+    customColorInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const color = this.value;
+            if (isValidHexColor(color)) {
+                updateSelectedColor(color);
+                colorPicker.classList.add('hidden');
+            }
+        }
+    });
+    
+    function updateSelectedColor(color) {
+        selectedColor.style.backgroundColor = color;
+        selectedColor.style.borderColor = getContrastColor(color);
+        // Update the hidden input value for the add filament functionality
+        if (domElements.newFilamentColor) {
+            domElements.newFilamentColor.value = color;
+        }
+    }
+    
+    function getContrastColor(hexColor) {
+        // Convert hex to RGB
+        const r = parseInt(hexColor.substr(1, 2), 16);
+        const g = parseInt(hexColor.substr(3, 2), 16);
+        const b = parseInt(hexColor.substr(5, 2), 16);
+        
+        // Calculate luminance
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        
+        // Return dark or light border based on luminance
+        return luminance > 0.5 ? '#475569' : '#f8fafc';
+    }
+    
+    function isValidHexColor(color) {
+        return /^#[0-9A-F]{6}$/i.test(color);
+    }
+}
+
+window.onload = function() {
+    loadMyFilaments();
+    initializeColorPicker();
+};
 domElements.uploadCard.onclick = () => domElements.fileInput.click();
 domElements.fileInput.onchange = () => domElements.fileInput.files.length && handleFile(domElements.fileInput.files[0]);
 domElements.numBandsInput.addEventListener('input', handleNumBandsChange);
@@ -190,14 +277,14 @@ domElements.singleLayerToggle.addEventListener('change', handleSettingsChange);
 domElements.addFilamentBtn.onclick = addFilament;
 domElements.suggestedPaletteBtn.onclick = () => {
     appState.activePalette = 'suggested';
-    domElements.suggestedPaletteBtn.classList.add('active');
-    domElements.myPaletteBtn.classList.remove('active');
+    domElements.suggestedPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500';
+    domElements.myPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-slate-600 text-slate-200 text-xs font-medium rounded-md transition-all hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500';
     updatePalette();
 };
 domElements.myPaletteBtn.onclick = () => {
     appState.activePalette = 'my';
-    domElements.myPaletteBtn.classList.add('active');
-    domElements.suggestedPaletteBtn.classList.remove('active');
+    domElements.myPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500';
+    domElements.suggestedPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-slate-600 text-slate-200 text-xs font-medium rounded-md transition-all hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500';
     updatePalette();
 };
 domElements.invertPaletteBtn.onclick = invertPalette;
@@ -217,6 +304,6 @@ domElements.newImageBtn.onclick = () => {
     appState.bandMap = null;
     appState.suggestedPalette = [];
     appState.activePalette = 'suggested';
-    domElements.suggestedPaletteBtn.classList.add('active');
-    domElements.myPaletteBtn.classList.remove('active');
+    domElements.suggestedPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500';
+    domElements.myPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-slate-600 text-slate-200 text-xs font-medium rounded-md transition-all hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500';
 };

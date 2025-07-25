@@ -31,13 +31,17 @@ export function getLuminance(hex) {
 
 /**
  * Calculates the squared Euclidean distance between two colors in RGB space.
- * We use squared distance to avoid expensive square root operations, as we only need it for comparison.
+ * Simple but effective for color matching.
  * @param {Array<number>} c1 - First color [r, g, b]
  * @param {Array<number>} c2 - Second color [r, g, b]
  * @returns {number} The squared distance.
  */
 export function colorDistance(c1, c2) {
-    return (c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2 + (c1[2] - c2[2]) ** 2;
+    const rDiff = c1[0] - c2[0];
+    const gDiff = c1[1] - c2[1];
+    const bDiff = c1[2] - c2[2];
+    
+    return rDiff * rDiff + gDiff * gDiff + bDiff * bDiff;
 }
 
 /**
@@ -60,10 +64,42 @@ function kMeans(data, k) {
         pixels.push([data[i], data[i + 1], data[i + 2]]);
     }
 
-    // Initialize centroids by picking k random pixels from the image
-    let centroids = pixels.slice(0, k); // Simple initialization
+    // Initialize centroids using k-means++ algorithm for better distribution
+    let centroids = [];
     if (pixels.length > k) {
-      centroids = [...Array(k)].map(() => pixels[Math.floor(Math.random() * pixels.length)]);
+      // Start with a random pixel (but use a deterministic seed)
+      const seed = pixels.length + k; // Deterministic seed
+      const firstIndex = seed % pixels.length;
+      centroids.push([...pixels[firstIndex]]);
+      
+      // Use k-means++ to select remaining centroids
+      for (let i = 1; i < k; i++) {
+        const distances = pixels.map(pixel => {
+          let minDistance = Infinity;
+          for (const centroid of centroids) {
+            const distance = colorDistance(pixel, centroid);
+            if (distance < minDistance) {
+              minDistance = distance;
+            }
+          }
+          return minDistance;
+        });
+        
+        // Select next centroid with probability proportional to distance squared
+        const totalDistance = distances.reduce((sum, d) => sum + d, 0);
+        let randomValue = (seed * (i + 1)) % totalDistance; // Deterministic but pseudo-random
+        
+        for (let j = 0; j < pixels.length; j++) {
+          randomValue -= distances[j];
+          if (randomValue <= 0) {
+            centroids.push([...pixels[j]]);
+            break;
+          }
+        }
+      }
+    } else {
+      // If we have fewer pixels than k, use all pixels
+      centroids = pixels.slice(0, k);
     }
 
     // Main k-means iteration loop
@@ -106,8 +142,9 @@ function kMeans(data, k) {
                 newCentroids[i][1] /= counts[i]; // Average green
                 newCentroids[i][2] /= counts[i]; // Average blue
             } else {
-                // If a centroid has no pixels, re-initialize it to a random pixel
-                newCentroids[i] = pixels[Math.floor(Math.random() * pixels.length)];
+                // If a centroid has no pixels, re-initialize it deterministically
+                const fallbackIndex = (i * 7) % pixels.length; // Deterministic but spread out
+                newCentroids[i] = [...pixels[fallbackIndex]];
             }
         }
         centroids = newCentroids;
@@ -116,8 +153,9 @@ function kMeans(data, k) {
 }
 
 /**
- * Matches suggested palette colors to available filament colors based on luminance.
+ * Matches suggested palette colors to available filament colors based on color similarity.
  * This ensures the final palette uses colors that are actually available for 3D printing.
+ * Uses a greedy algorithm to avoid duplicate filament usage while prioritizing best matches.
  * 
  * @param {Array<string>} suggestedPalette - Array of hex color strings from k-means
  * @param {Array<string>} myFilaments - Array of available filament hex colors
@@ -126,19 +164,68 @@ function kMeans(data, k) {
 export function matchToPalette(suggestedPalette, myFilaments) {
     if (!myFilaments || myFilaments.length === 0) return suggestedPalette;
     
-    // Sort filaments by luminance (brightness) for consistent matching
-    const sortedFilaments = [...myFilaments].sort((a, b) => getLuminance(a) - getLuminance(b));
-    
-    // Create indexed version of suggested palette to preserve original order
-    const indexedSuggested = suggestedPalette.map((color, index) => ({ color, originalIndex: index }));
-    indexedSuggested.sort((a, b) => getLuminance(a.color) - getLuminance(b.color));
-    
-    // Match colors by luminance order and restore original order
-    const matchedPalette = new Array(suggestedPalette.length);
-    indexedSuggested.forEach(({ originalIndex }, i) => {
-        const filamentIndex = i % sortedFilaments.length;
-        matchedPalette[originalIndex] = sortedFilaments[filamentIndex];
+    // Convert filament colors to RGB arrays for distance calculation
+    const filamentRgb = myFilaments.map(color => {
+        const { r, g, b } = hexToRgb(color);
+        return [r, g, b];
     });
+    
+    // Create all possible matches with their distances
+    const allMatches = [];
+    suggestedPalette.forEach((suggestedColor, suggestedIndex) => {
+        const { r, g, b } = hexToRgb(suggestedColor);
+        const suggestedRgb = [r, g, b];
+        
+        filamentRgb.forEach((filamentRgb, filamentIndex) => {
+            const distance = colorDistance(suggestedRgb, filamentRgb);
+            allMatches.push({
+                suggestedIndex,
+                filamentIndex,
+                suggestedColor,
+                filamentColor: myFilaments[filamentIndex],
+                distance
+            });
+        });
+    });
+    
+    // Sort matches by distance (best matches first)
+    allMatches.sort((a, b) => a.distance - b.distance);
+    
+    // Use greedy algorithm to assign matches, avoiding duplicates
+    const matchedPalette = new Array(suggestedPalette.length);
+    const usedFilaments = new Set();
+    const usedSuggestions = new Set();
+    
+    allMatches.forEach(match => {
+        // Skip if we've already matched this suggested color or filament
+        if (usedSuggestions.has(match.suggestedIndex) || usedFilaments.has(match.filamentIndex)) {
+            return;
+        }
+        
+        // Assign this match
+        matchedPalette[match.suggestedIndex] = match.filamentColor;
+        usedSuggestions.add(match.suggestedIndex);
+        usedFilaments.add(match.filamentIndex);
+    });
+    
+    // Fill any remaining unmatched suggestions with the best available filament
+    for (let i = 0; i < matchedPalette.length; i++) {
+        if (!matchedPalette[i]) {
+            // Find the best unused filament
+            for (let j = 0; j < myFilaments.length; j++) {
+                if (!usedFilaments.has(j)) {
+                    matchedPalette[i] = myFilaments[j];
+                    usedFilaments.add(j);
+                    break;
+                }
+            }
+            // If all filaments are used, use the first one
+            if (!matchedPalette[i]) {
+                matchedPalette[i] = myFilaments[0];
+            }
+        }
+    }
+    
     return matchedPalette;
 }
 
@@ -150,10 +237,111 @@ export function matchToPalette(suggestedPalette, myFilaments) {
  * @returns {Array<string>} Array of hex color strings representing dominant colors
  */
 export function getSuggestedColors(imageData, bands) {
+  // Preprocess the image data to group very similar colors together
+  const preprocessedData = preprocessImageData(imageData);
+  
   // Use k-means to find dominant colors
-  const dominantColors = kMeans(imageData, bands);
-  // Convert the [r,g,b] arrays to hex strings
-  return dominantColors.map(c => rgbToHex(c[0], c[1], c[2]));
+  const dominantColors = kMeans(preprocessedData, bands);
+  // Convert the [r,g,b] arrays to hex strings and ensure uniqueness
+  const hexColors = dominantColors.map(c => rgbToHex(c[0], c[1], c[2]));
+  return ensureUniqueColors(hexColors, imageData);
+}
+
+/**
+ * Preprocesses image data to group very similar colors together, reducing noise.
+ * This helps prevent tiny color variations from being treated as separate colors.
+ * @param {Uint8ClampedArray} imageData - Raw RGBA image data
+ * @returns {Uint8ClampedArray} Preprocessed image data
+ */
+function preprocessImageData(imageData) {
+  const processedData = new Uint8ClampedArray(imageData.length);
+  
+  // Group similar colors by quantizing them to a coarser grid
+  const quantizationLevel = 32; // Reduce color precision to group similar colors
+  
+  for (let i = 0; i < imageData.length; i += 4) {
+    // Quantize RGB values to reduce precision
+    const r = Math.round(imageData[i] / quantizationLevel) * quantizationLevel;
+    const g = Math.round(imageData[i + 1] / quantizationLevel) * quantizationLevel;
+    const b = Math.round(imageData[i + 2] / quantizationLevel) * quantizationLevel;
+    
+    processedData[i] = r;
+    processedData[i + 1] = g;
+    processedData[i + 2] = b;
+    processedData[i + 3] = imageData[i + 3]; // Keep alpha unchanged
+  }
+  
+  return processedData;
+}
+
+/**
+ * Ensures the suggested palette has unique colors by replacing duplicates with distinct alternatives.
+ * @param {Array<string>} colors - Array of hex color strings
+ * @param {Uint8ClampedArray} imageData - Raw image data for finding alternative colors
+ * @returns {Array<string>} Array of unique hex color strings
+ */
+function ensureUniqueColors(colors, imageData) {
+  const uniqueColors = [];
+  const usedColors = new Set();
+  
+  for (let i = 0; i < colors.length; i++) {
+    const color = colors[i];
+    
+    // If this color is already used, find a distinct alternative
+    if (usedColors.has(color)) {
+      const alternative = findDistinctColor(usedColors, imageData);
+      uniqueColors.push(alternative);
+      usedColors.add(alternative);
+    } else {
+      uniqueColors.push(color);
+      usedColors.add(color);
+    }
+  }
+  
+  return uniqueColors;
+}
+
+/**
+ * Finds a distinct color that's not already in the used colors set.
+ * @param {Set<string>} usedColors - Set of already used hex colors
+ * @param {Uint8ClampedArray} imageData - Raw image data
+ * @returns {string} A distinct hex color
+ */
+function findDistinctColor(usedColors, imageData) {
+  // Sample random pixels from the image to find a distinct color
+  const maxAttempts = 100;
+  
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    // Pick a random pixel
+    const pixelIndex = Math.floor(Math.random() * (imageData.length / 4)) * 4;
+    const r = imageData[pixelIndex];
+    const g = imageData[pixelIndex + 1];
+    const b = imageData[pixelIndex + 2];
+    const color = rgbToHex(r, g, b);
+    
+    // Check if this color is distinct enough from all used colors
+    let isDistinct = true;
+    for (const usedColor of usedColors) {
+      const { r: ur, g: ug, b: ub } = hexToRgb(usedColor);
+      const distance = colorDistance([r, g, b], [ur, ug, ub]);
+      
+      // If the distance is too small, this color is too similar
+      if (distance < 10000) { // Threshold for "similar" colors
+        isDistinct = false;
+        break;
+      }
+    }
+    
+    if (isDistinct) {
+      return color;
+    }
+  }
+  
+  // If we can't find a distinct color, generate a random one
+  const r = Math.floor(Math.random() * 256);
+  const g = Math.floor(Math.random() * 256);
+  const b = Math.floor(Math.random() * 256);
+  return rgbToHex(r, g, b);
 }
 
 /**
@@ -237,9 +425,12 @@ export function processImage(appState, domElements) {
   const currentLayer = parseInt(layerSlider.value, 10);
   const isSingleLayerMode = singleLayerToggle ? singleLayerToggle.checked : false;
 
+  // Use the current palette from app state, or fall back to reading from DOM
+  const currentPalette = appState.currentPalette || Array.from(paletteDiv.children).map(input => input.value);
+  
   // Convert palette colors from hex to RGB arrays for distance calculation
-  const paletteColors = Array.from(paletteDiv.children).map(input => {
-      const { r, g, b } = hexToRgb(input.value);
+  const paletteColors = currentPalette.map(color => {
+      const { r, g, b } = hexToRgb(color);
       return [r, g, b];
   });
   if (paletteColors.length === 0) return null; // Exit if palette isn't ready
@@ -265,7 +456,7 @@ export function processImage(appState, domElements) {
   }
 
   // Get the base color (index 0 of the palette)
-  const baseColor = hexToRgb(paletteDiv.children[0].value);
+  const baseColor = hexToRgb(currentPalette[0]);
   
   // Create a new image data for the preview
   const previewImageData = context.createImageData(origCanvas.width, origCanvas.height);
@@ -285,7 +476,7 @@ export function processImage(appState, domElements) {
     if (currentLayer > 0) { // Don't draw anything for base layer (0)
       for (let i = 0, j = 0; i < previewData.length; i += 4, j++) {
         if (bandMap[j] === currentLayer) {
-          const { r, g, b } = hexToRgb(paletteDiv.children[currentLayer].value);
+          const { r, g, b } = hexToRgb(currentPalette[currentLayer]);
           previewData[i] = r;     // Red
           previewData[i + 1] = g; // Green
           previewData[i + 2] = b; // Blue
@@ -298,7 +489,7 @@ export function processImage(appState, domElements) {
     for (let layer = 1; layer <= currentLayer; layer++) {
       for (let i = 0, j = 0; i < previewData.length; i += 4, j++) {
         if (bandMap[j] === layer) {
-          const { r, g, b } = hexToRgb(paletteDiv.children[layer].value);
+          const { r, g, b } = hexToRgb(currentPalette[layer]);
           previewData[i] = r;     // Red
           previewData[i + 1] = g; // Green
           previewData[i + 2] = b; // Blue

@@ -1,3 +1,58 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Hide default spinner buttons on number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Custom color picker styles */
+#colorPickerTrigger {
+  @apply relative;
+}
+
+#selectedColor {
+  @apply transition-all duration-200;
+}
+
+#customColorInput {
+  @apply transition-all duration-200;
+}
+
+/* Instructions modal color swatches */
+.color-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid #64748b;
+  margin-right: 8px;
+}
+
+/* Filament spool icon styles */
+.filament-icon {
+  @apply relative inline-flex items-center justify-center w-8 h-8 rounded-full cursor-pointer transition-all duration-200 hover:scale-110;
+  --filament-color: #ffffff;
+}
+
+.filament-outer-ring {
+  @apply w-full h-full rounded-full border-3 border-slate-700 flex items-center justify-center;
+  background: var(--filament-color);
+}
+
+.filament-center-dot {
+  @apply w-3 h-3 rounded-full;
+  background: #1e293b;
+  border: 1px solid #475569;
+}
+
+.filament-remove-btn {
+  @apply absolute -top-1 -right-1 w-4 h-4 bg-red-500 border border-red-600 rounded-full text-white text-xs font-bold opacity-0 hover:opacity-100 transition-opacity duration-200 cursor-pointer flex items-center justify-center;
+}

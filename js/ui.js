@@ -19,16 +19,36 @@ export function renderMyFilaments(filaments, container, onRemove) {
     container.innerHTML = '';
     filaments.forEach((color, index) => {
         const filamentChip = document.createElement('div');
-        filamentChip.className = 'filament-color';
-        filamentChip.style.backgroundColor = color;
+        filamentChip.className = 'filament-icon';
+        filamentChip.style.setProperty('--filament-color', color);
+        
+        // Create the spool structure
+        const spoolBody = document.createElement('div');
+        spoolBody.className = 'filament-outer-ring';
+        
+        const centerHole = document.createElement('div');
+        centerHole.className = 'filament-center-dot';
+        
+        // Create label
+        const label = document.createElement('div');
+        label.className = 'filament-label';
+        label.textContent = 'PLA';
+        
+        // Create remove button
         const removeBtn = document.createElement('button');
-        removeBtn.className = 'remove-btn';
-        removeBtn.textContent = '×';
+        removeBtn.className = 'filament-remove-btn';
+        removeBtn.innerHTML = '×';
         removeBtn.onclick = (e) => {
             e.stopPropagation();
             onRemove(index);
         };
+        
+        // Assemble the filament spool icon
+        spoolBody.appendChild(centerHole);
+        filamentChip.appendChild(spoolBody);
+        filamentChip.appendChild(label);
         filamentChip.appendChild(removeBtn);
+        
         container.appendChild(filamentChip);
     });
 }
