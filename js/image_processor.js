@@ -425,11 +425,14 @@ export function processImage(appState, domElements) {
   const currentLayer = parseInt(layerSlider.value, 10);
   const isSingleLayerMode = singleLayerToggle ? singleLayerToggle.checked : false;
 
-  // Use the current palette from app state, or fall back to reading from DOM
-  const currentPalette = appState.currentPalette || Array.from(paletteDiv.children).map(input => input.value);
+  // Always use the suggested palette for creating the band map (image structure)
+  const suggestedPalette = appState.suggestedPalette || Array.from(paletteDiv.children).map(input => input.value);
   
-  // Convert palette colors from hex to RGB arrays for distance calculation
-  const paletteColors = currentPalette.map(color => {
+  // Use the current palette for rendering colors
+  const currentPalette = appState.currentPalette || suggestedPalette;
+  
+  // Convert suggested palette colors from hex to RGB arrays for distance calculation
+  const paletteColors = suggestedPalette.map(color => {
       const { r, g, b } = hexToRgb(color);
       return [r, g, b];
   });
@@ -438,11 +441,11 @@ export function processImage(appState, domElements) {
   // Create band map: each pixel gets assigned to a color band (0 to numBands-1)
   const bandMap = new Float32Array(data.length / 4);
   
-  // First pass: Create the band map and find the base color
+  // First pass: Create the band map using the suggested palette (image structure)
   for (let i = 0, j = 0; i < data.length; i += 4, j++) {
     const pixelColor = [data[i], data[i + 1], data[i + 2]];
     
-    // Find the closest color in the palette for the current pixel using color distance
+    // Find the closest color in the suggested palette for the current pixel using color distance
     let minDistance = Infinity;
     let bandIndex = 0;
     for (let k = 0; k < paletteColors.length; k++) {
@@ -455,7 +458,7 @@ export function processImage(appState, domElements) {
     bandMap[j] = bandIndex;
   }
 
-  // Get the base color (index 0 of the palette)
+  // Get the base color from the current palette (for rendering)
   const baseColor = hexToRgb(currentPalette[0]);
   
   // Create a new image data for the preview

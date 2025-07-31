@@ -1,53 +1,26 @@
 import { getSuggestedColors, processImage, matchToPalette, detectBackgroundColor, colorDistance, hexToRgb, getLuminance } from './image_processor.js';
 import { generateStl } from './stl_exporter.js';
-import { renderPalette, resetApp, showApp, renderMyFilaments, showModal, hideModal } from './ui.js';
+import { renderPalette, resetApp, showApp, renderMyFilaments, showModal, hideModal, showMainContent, showUploadArea, showHeaderButtons, hideHeaderButtons } from './ui.js';
 
-const domElements = {
-    spinner: document.getElementById('spinner'),
-    uploadScreen: document.getElementById('uploadScreen'),
-    uploadCard: document.getElementById('uploadCard'),
-    app: document.getElementById('app'),
-    fileInput: document.getElementById('fileInput'),
-    origCanvas: document.getElementById('origCanvas'),
-    procCanvas: document.getElementById('procCanvas'),
-    paletteDiv: document.getElementById('palette'),
-    numBandsInput: document.getElementById('numBands'),
-    numBandsValue: document.getElementById('numBandsValue'),
-    layerHeightInput: document.getElementById('layerHeight'),
-    bandThicknessInput: document.getElementById('bandThickness'),
-    baseThicknessInput: document.getElementById('baseThickness'),
-    xSizeInput: document.getElementById('xSize'),
-    ySizeInput: document.getElementById('ySize'),
-    layerSlider: document.getElementById('layerSlider'),
-    layerValue: document.getElementById('layerValue'),
-    singleLayerToggle: document.getElementById('singleLayerToggle'),
-    exportBtn: document.getElementById('exportBtn'),
-    newImageBtn: document.getElementById('newImageBtn'),
-    instructionsBtn: document.getElementById('instructionsBtn'),
-    suggestedPaletteBtn: document.getElementById('suggestedPaletteBtn'),
-    myPaletteBtn: document.getElementById('myPaletteBtn'),
-    invertPaletteBtn: document.getElementById('invertPaletteBtn'),
-    newFilamentColor: document.getElementById('newFilamentColor'),
-    addFilamentBtn: document.getElementById('addFilamentBtn'),
-    myFilamentsList: document.getElementById('myFilamentsList'),
-    modal: document.getElementById('modal'),
-    modalTitle: document.getElementById('modalTitle'),
-    modalBody: document.getElementById('modalBody'),
-    modalCloseBtn: document.getElementById('modalCloseBtn'),
-};
+let domElements;
+let appState;
 
-const appState = {
-    img: null, bandMap: null, origCanvas: domElements.origCanvas,
-    myFilaments: [], suggestedPalette: [], activePalette: 'suggested',
-};
-
-function handleFile(file) { showApp(domElements); loadImage(file); }
+function handleFile(file) { 
+    console.log('handleFile called with:', file);
+    loadImage(file); 
+    showMainContent(domElements);
+}
 
 function loadImage(file) {
+  console.log('loadImage called with:', file);
   const reader = new FileReader();
   reader.onload = event => {
+    console.log('FileReader onload triggered');
     appState.img = new Image();
-    appState.img.onload = () => { handleNumBandsChange(); };
+    appState.img.onload = () => { 
+        console.log('Image loaded successfully');
+        handleNumBandsChange(); 
+    };
     appState.img.src = event.target.result;
   };
   reader.readAsDataURL(file);
@@ -68,6 +41,7 @@ function handleNumBandsChange() {
     context.drawImage(img, 0, 0, img.width, img.height);
     const numBands = parseInt(numBandsInput.value, 10);
     numBandsValue.textContent = numBands;
+    layerSlider.min = 0;
     layerSlider.max = numBands - 1;
     layerSlider.value = numBands - 1;
     layerValue.textContent = numBands;
@@ -128,7 +102,7 @@ function showSlicerInstructions() {
     const baseThickness = parseInt(baseThicknessInput.value, 10);
     const bandThickness = parseInt(bandThicknessInput.value, 10);
     const colors = Array.from(paletteDiv.children).map(input => input.value);
-    let instructionsHTML = '<ul>';
+    let instructionsHTML = '<ul class="space-y-2">';
     colors.forEach((color, index) => {
         let text;
         if (index === 0) {
@@ -137,7 +111,7 @@ function showSlicerInstructions() {
             const startLayer = baseThickness + ((index - 1) * bandThickness) + 1;
             text = `Change to this color at Layer ${startLayer}`;
         }
-        instructionsHTML += `<li><div class="color-swatch" style="background-color:${color};"></div><span>${text}</span></li>`;
+        instructionsHTML += `<li class="flex items-center gap-3"><div class="w-4 h-4 rounded border border-gray-600" style="background-color:${color};"></div><span class="text-gray-300">${text}</span></li>`;
     });
     instructionsHTML += '</ul>';
     showModal(domElements, "Slicer Instructions", instructionsHTML);
@@ -153,14 +127,89 @@ function loadMyFilaments() {
 }
 
 function addFilament() {
-    if (appState.myFilaments.length >= 16) { alert("Max 16 filaments."); return; }
-    const newColor = domElements.newFilamentColor.value;
-    if (!appState.myFilaments.includes(newColor)) {
-        appState.myFilaments.push(newColor);
+    if (appState.myFilaments.length >= 16) { 
+        showModal(domElements, "Maximum Filaments", "You can only have up to 16 filaments. Please remove some before adding new ones.");
+        return; 
+    }
+    
+    // Create a simple color picker modal
+    const modalHTML = `
+        <div class="space-y-4">
+            <p class="text-gray-300">Select a color for your new filament:</p>
+            <div class="grid grid-cols-8 gap-2">
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #ff0000" data-color="#ff0000"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #ff8000" data-color="#ff8000"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #ffff00" data-color="#ffff00"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #80ff00" data-color="#80ff00"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #00ff00" data-color="#00ff00"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #00ff80" data-color="#00ff80"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #00ffff" data-color="#00ffff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #0080ff" data-color="#0080ff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #0000ff" data-color="#0000ff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #8000ff" data-color="#8000ff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #ff00ff" data-color="#ff00ff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #ff0080" data-color="#ff0080"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #ffffff" data-color="#ffffff"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #cccccc" data-color="#cccccc"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #999999" data-color="#999999"></div>
+                <div class="w-8 h-8 rounded cursor-pointer border border-gray-600 hover:scale-110 transition-transform" style="background: #000000" data-color="#000000"></div>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="customColorInput" placeholder="#ffffff" class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 text-sm">
+                <button id="addCustomColorBtn" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700">Add</button>
+            </div>
+        </div>
+    `;
+    
+    showModal(domElements, "Add New Filament", modalHTML);
+    
+    // Add event listeners for color selection
+    const colorSwatches = domElements.modalBody.querySelectorAll('[data-color]');
+    const customColorInput = domElements.modalBody.querySelector('#customColorInput');
+    const addCustomColorBtn = domElements.modalBody.querySelector('#addCustomColorBtn');
+    
+    colorSwatches.forEach(swatch => {
+        swatch.addEventListener('click', function() {
+            const color = this.getAttribute('data-color');
+            addFilamentWithColor(color);
+        });
+    });
+    
+    addCustomColorBtn.addEventListener('click', function() {
+        const color = customColorInput.value;
+        if (isValidHexColor(color)) {
+            addFilamentWithColor(color);
+        } else {
+            alert('Please enter a valid hex color (e.g., #ff0000)');
+        }
+    });
+    
+    customColorInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const color = this.value;
+            if (isValidHexColor(color)) {
+                addFilamentWithColor(color);
+            } else {
+                alert('Please enter a valid hex color (e.g., #ff0000)');
+            }
+        }
+    });
+}
+
+function addFilamentWithColor(color) {
+    if (!appState.myFilaments.includes(color)) {
+        appState.myFilaments.push(color);
         saveMyFilaments();
         renderMyFilaments(appState.myFilaments, domElements.myFilamentsList, removeFilament);
         if (appState.activePalette === 'my') updatePalette();
+        hideModal(domElements);
+    } else {
+        alert('This color is already in your filaments!');
     }
+}
+
+function isValidHexColor(color) {
+    return /^#[0-9A-F]{6}$/i.test(color);
 }
 
 function removeFilament(indexToRemove) {
@@ -177,133 +226,184 @@ function invertPalette() {
     }
 }
 
-function initializeColorPicker() {
-    const selectedColor = document.getElementById('selectedColor');
-    const trigger = document.getElementById('colorPickerTrigger');
-    const colorPicker = document.getElementById('customColorPicker');
-    const customColorInput = document.getElementById('customColorInput');
-    
-    if (!selectedColor || !trigger || !colorPicker) return;
-    
-    // Set initial color
-    updateSelectedColor('#ffffff');
-    customColorInput.value = '#ffffff';
-    
-    // Toggle color picker on trigger click
-    trigger.addEventListener('click', function(e) {
-        e.stopPropagation();
-        colorPicker.classList.toggle('hidden');
-    });
-    
-    // Close color picker when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!colorPicker.contains(e.target) && !trigger.contains(e.target)) {
-            colorPicker.classList.add('hidden');
-        }
-    });
-    
-    // Handle predefined color clicks
-    const colorSwatches = colorPicker.querySelectorAll('[data-color]');
-    colorSwatches.forEach(swatch => {
-        swatch.addEventListener('click', function() {
-            const color = this.getAttribute('data-color');
-            updateSelectedColor(color);
-            customColorInput.value = color;
-            colorPicker.classList.add('hidden');
-        });
-    });
-    
-    // Handle custom color input
-    customColorInput.addEventListener('input', function() {
-        const color = this.value;
-        if (isValidHexColor(color)) {
-            updateSelectedColor(color);
-        }
-    });
-    
-    // Handle custom color input on enter
-    customColorInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            const color = this.value;
-            if (isValidHexColor(color)) {
-                updateSelectedColor(color);
-                colorPicker.classList.add('hidden');
-            }
-        }
-    });
-    
-    function updateSelectedColor(color) {
-        selectedColor.style.backgroundColor = color;
-        selectedColor.style.borderColor = getContrastColor(color);
-        // Update the hidden input value for the add filament functionality
-        if (domElements.newFilamentColor) {
-            domElements.newFilamentColor.value = color;
-        }
-    }
-    
-    function getContrastColor(hexColor) {
-        // Convert hex to RGB
-        const r = parseInt(hexColor.substr(1, 2), 16);
-        const g = parseInt(hexColor.substr(3, 2), 16);
-        const b = parseInt(hexColor.substr(5, 2), 16);
-        
-        // Calculate luminance
-        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        
-        // Return dark or light border based on luminance
-        return luminance > 0.5 ? '#475569' : '#f8fafc';
-    }
-    
-    function isValidHexColor(color) {
-        return /^#[0-9A-F]{6}$/i.test(color);
-    }
-}
-
 window.onload = function() {
+    console.log('Window loaded, setting up event listeners');
+    
+    // Initialize DOM elements after DOM is loaded
+    domElements = {
+        spinner: document.getElementById('spinner'),
+        uploadArea: document.getElementById('uploadArea'),
+        uploadCard: document.getElementById('uploadCard'),
+        mainContent: document.getElementById('mainContent'),
+        app: document.getElementById('app'),
+        fileInput: document.getElementById('fileInput'),
+        origCanvas: document.getElementById('origCanvas'),
+        procCanvas: document.getElementById('procCanvas'),
+        paletteDiv: document.getElementById('palette'),
+        numBandsInput: document.getElementById('numBands'),
+        numBandsValue: document.getElementById('numBandsValue'),
+        layerHeightInput: document.getElementById('layerHeight'),
+        bandThicknessInput: document.getElementById('bandThickness'),
+        baseThicknessInput: document.getElementById('baseThickness'),
+        xSizeInput: document.getElementById('xSize'),
+        ySizeInput: document.getElementById('ySize'),
+        layerSlider: document.getElementById('layerSlider'),
+        layerValue: document.getElementById('layerValue'),
+        maxLayers: document.getElementById('maxLayers'),
+        singleLayerToggle: document.getElementById('singleLayerToggle'),
+        exportBtn: document.getElementById('exportBtn'),
+        newImageBtn: document.getElementById('newImageBtn'),
+        instructionsBtn: document.getElementById('instructionsBtn'),
+        suggestedPaletteBtn: document.getElementById('suggestedPaletteBtn'),
+        myPaletteBtn: document.getElementById('myPaletteBtn'),
+        invertPaletteBtn: document.getElementById('invertPaletteBtn'),
+        addFilamentBtn: document.getElementById('addFilamentBtn'),
+        myFilamentsList: document.getElementById('myFilamentsList'),
+        modal: document.getElementById('modal'),
+        modalTitle: document.getElementById('modalTitle'),
+        modalBody: document.getElementById('modalBody'),
+        modalCloseBtn: document.getElementById('modalCloseBtn'),
+    };
+
+    // Initialize app state
+    appState = {
+        img: null, 
+        bandMap: null, 
+        origCanvas: domElements.origCanvas,
+        myFilaments: [], 
+        suggestedPalette: [], 
+        activePalette: 'suggested',
+    };
+
+    // Debug DOM elements
+    console.log('DOM Elements found:', {
+        uploadCard: !!domElements.uploadCard,
+        fileInput: !!domElements.fileInput,
+        uploadArea: !!domElements.uploadArea,
+        mainContent: !!domElements.mainContent
+    });
+
     loadMyFilaments();
-    initializeColorPicker();
-};
-domElements.uploadCard.onclick = () => domElements.fileInput.click();
-domElements.fileInput.onchange = () => domElements.fileInput.files.length && handleFile(domElements.fileInput.files[0]);
-domElements.numBandsInput.addEventListener('input', handleNumBandsChange);
-domElements.layerHeightInput.addEventListener('input', handleSettingsChange);
-domElements.baseThicknessInput.addEventListener('input', handleSettingsChange);
-domElements.bandThicknessInput.addEventListener('input', handleSettingsChange);
-domElements.layerSlider.addEventListener('input', () => {
-    domElements.layerValue.textContent = parseInt(domElements.layerSlider.value, 10) + 1;
-    handleSettingsChange();
-});
-domElements.singleLayerToggle.addEventListener('change', handleSettingsChange);
-domElements.addFilamentBtn.onclick = addFilament;
-domElements.suggestedPaletteBtn.onclick = () => {
-    appState.activePalette = 'suggested';
-    domElements.suggestedPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500';
-    domElements.myPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-slate-600 text-slate-200 text-xs font-medium rounded-md transition-all hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500';
-    updatePalette();
-};
-domElements.myPaletteBtn.onclick = () => {
-    appState.activePalette = 'my';
-    domElements.myPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500';
-    domElements.suggestedPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-slate-600 text-slate-200 text-xs font-medium rounded-md transition-all hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500';
-    updatePalette();
-};
-domElements.invertPaletteBtn.onclick = invertPalette;
-domElements.instructionsBtn.onclick = showSlicerInstructions;
-domElements.modalCloseBtn.onclick = () => hideModal(domElements);
-domElements.exportBtn.onclick = () => {
-    const blob = generateStl(appState, domElements);
-    const downloadLink = document.createElement('a');
-    downloadLink.href = URL.createObjectURL(blob);
-    downloadLink.download = 'colorstack.stl';
-    downloadLink.click();
-    URL.revokeObjectURL(downloadLink.href);
-};
-domElements.newImageBtn.onclick = () => {
-    resetApp(domElements);
-    appState.img = null;
-    appState.bandMap = null;
-    appState.suggestedPalette = [];
-    appState.activePalette = 'suggested';
-    domElements.suggestedPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500';
-    domElements.myPaletteBtn.className = 'flex-1 px-3 py-1.5 bg-slate-600 text-slate-200 text-xs font-medium rounded-md transition-all hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500';
+    
+    // Hide header buttons initially since no image is loaded
+    hideHeaderButtons(domElements);
+    
+    // Set up all event listeners with error handling
+    if (domElements.uploadCard) {
+        console.log('Setting up upload card click handler');
+        domElements.uploadCard.onclick = () => {
+            console.log('Upload card clicked');
+            domElements.fileInput.click();
+        };
+        
+        // Add drag and drop functionality
+        domElements.uploadCard.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            domElements.uploadCard.classList.add('dragover');
+        });
+        
+        domElements.uploadCard.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            domElements.uploadCard.classList.remove('dragover');
+        });
+        
+        domElements.uploadCard.addEventListener('drop', (e) => {
+            e.preventDefault();
+            domElements.uploadCard.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            console.log('File dropped:', files);
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+    } else {
+        console.error('uploadCard element not found');
+    }
+    if (domElements.fileInput) {
+        console.log('Setting up file input change handler');
+        domElements.fileInput.onchange = () => {
+            console.log('File input changed:', domElements.fileInput.files);
+            if (domElements.fileInput.files.length) {
+                handleFile(domElements.fileInput.files[0]);
+            }
+        };
+    } else {
+        console.error('fileInput element not found');
+    }
+    if (domElements.numBandsInput) {
+        domElements.numBandsInput.addEventListener('input', handleNumBandsChange);
+    }
+    if (domElements.layerHeightInput) {
+        domElements.layerHeightInput.addEventListener('input', handleSettingsChange);
+    }
+    if (domElements.baseThicknessInput) {
+        domElements.baseThicknessInput.addEventListener('input', handleSettingsChange);
+    }
+    if (domElements.bandThicknessInput) {
+        domElements.bandThicknessInput.addEventListener('input', handleSettingsChange);
+    }
+    if (domElements.xSizeInput) {
+        domElements.xSizeInput.addEventListener('input', handleSettingsChange);
+    }
+    if (domElements.ySizeInput) {
+        domElements.ySizeInput.addEventListener('input', handleSettingsChange);
+    }
+    if (domElements.layerSlider) {
+        domElements.layerSlider.addEventListener('input', () => {
+            domElements.layerValue.textContent = parseInt(domElements.layerSlider.value, 10) + 1;
+            handleSettingsChange();
+        });
+    }
+    if (domElements.singleLayerToggle) {
+        domElements.singleLayerToggle.addEventListener('change', handleSettingsChange);
+    }
+    if (domElements.addFilamentBtn) {
+        domElements.addFilamentBtn.onclick = addFilament;
+    }
+    if (domElements.suggestedPaletteBtn) {
+        domElements.suggestedPaletteBtn.onclick = () => {
+            appState.activePalette = 'suggested';
+            domElements.suggestedPaletteBtn.className = 'px-3 py-1 text-sm font-medium rounded-md bg-indigo-600 text-white';
+            domElements.myPaletteBtn.className = 'px-3 py-1 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700';
+            updatePalette();
+        };
+    }
+    if (domElements.myPaletteBtn) {
+        domElements.myPaletteBtn.onclick = () => {
+            appState.activePalette = 'my';
+            domElements.myPaletteBtn.className = 'px-3 py-1 text-sm font-medium rounded-md bg-indigo-600 text-white';
+            domElements.suggestedPaletteBtn.className = 'px-3 py-1 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700';
+            updatePalette();
+        };
+    }
+    if (domElements.invertPaletteBtn) {
+        domElements.invertPaletteBtn.onclick = invertPalette;
+    }
+    if (domElements.instructionsBtn) {
+        domElements.instructionsBtn.onclick = showSlicerInstructions;
+    }
+    if (domElements.modalCloseBtn) {
+        domElements.modalCloseBtn.onclick = () => hideModal(domElements);
+    }
+    if (domElements.exportBtn) {
+        domElements.exportBtn.onclick = () => {
+            const blob = generateStl(appState, domElements);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = 'colorstack.stl';
+            downloadLink.click();
+            URL.revokeObjectURL(downloadLink.href);
+        };
+    }
+    if (domElements.newImageBtn) {
+        domElements.newImageBtn.onclick = () => {
+            resetApp(domElements);
+            appState.img = null;
+            appState.bandMap = null;
+            appState.suggestedPalette = [];
+            appState.activePalette = 'suggested';
+            domElements.suggestedPaletteBtn.className = 'px-3 py-1 text-sm font-medium rounded-md bg-indigo-600 text-white';
+            domElements.myPaletteBtn.className = 'px-3 py-1 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700';
+        };
+    }
 };

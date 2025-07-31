@@ -1,417 +1,636 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ColorStack Auto Process</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="dist/output.css">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    
+    <!-- Primary Meta Tags -->
+    <title>ColorStack - Free HueForge Alternative for Color-Layered 3D Printing</title>
+    <meta name="title" content="ColorStack - Free HueForge Alternative for Color-Layered 3D Printing">
+    <meta name="description" content="Transform any image into beautiful multi-color 3D prints with ColorStack. Free, browser-based tool for creating color-layered STL files. Perfect alternative to HueForge for 3D printing enthusiasts.">
+    <meta name="keywords" content="3D printing, color printing, STL files, HueForge alternative, multi-color prints, 3D modeling, color layers, filament colors, 3D print design, free 3D printing tool, browser-based 3D modeling, image to STL converter">
+    <meta name="author" content="ColorStack">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <meta name="bingbot" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="revisit-after" content="7 days">
+    <meta name="rating" content="general">
+    <meta name="distribution" content="global">
+    <meta name="coverage" content="worldwide">
+    <meta name="target" content="all">
+    <meta name="HandheldFriendly" content="true">
+    <meta name="MobileOptimized" content="width">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="theme-color" content="#6366F1" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#6366F1" media="(prefers-color-scheme: dark)">
+    
+    <!-- Security Meta Tags -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://colorstack.app/">
+    <meta property="og:title" content="ColorStack - Free HueForge Alternative for Color-Layered 3D Printing">
+    <meta property="og:description" content="Transform any image into beautiful multi-color 3D prints with ColorStack. Free, browser-based tool for creating color-layered STL files.">
+    <meta property="og:image" content="https://colorstack.app/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="ColorStack - Free 3D printing tool for color-layered models">
+    <meta property="og:site_name" content="ColorStack">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:determiner" content="the">
+    <meta property="og:audio" content="">
+    <meta property="og:video" content="">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:site" content="@colorstack_app">
+    <meta property="twitter:creator" content="@colorstack_app">
+    <meta property="twitter:url" content="https://colorstack.app/">
+    <meta property="twitter:title" content="ColorStack - Free HueForge Alternative for Color-Layered 3D Printing">
+    <meta property="twitter:description" content="Transform any image into beautiful multi-color 3D prints with ColorStack. Free, browser-based tool for creating color-layered STL files.">
+    <meta property="twitter:image" content="https://colorstack.app/og-image.png">
+    <meta property="twitter:image:alt" content="ColorStack - Free 3D printing tool for color-layered models">
+    
+    <!-- Additional Meta Tags -->
+    <meta name="theme-color" content="#6366F1">
+    <meta name="msapplication-TileColor" content="#6366F1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ColorStack">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://colorstack.app/">
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    
+    <!-- External Resources -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    
+    <!-- Plausible Analytics -->
+    <script async defer data-domain="colorstack.app" src="https://plausible.io/js/script.js"></script>
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ColorStack",
+      "description": "Free browser-based tool for creating color-layered STL files from images. Perfect alternative to HueForge for 3D printing enthusiasts.",
+      "url": "https://colorstack.app",
+      "applicationCategory": "DesignApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Image to STL conversion",
+        "Multi-color layer generation",
+        "Browser-based processing",
+        "Free to use",
+        "No software installation required"
+      ],
+      "author": {
+        "@type": "Organization",
+        "name": "ColorStack"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "ColorStack"
+      }
+    }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0A0A0A;
+            color: #E0E0E0;
+        }
+        .card {
+            background-color: #1A1A1A;
+            border: 1px solid #2A2A2A;
+            border-radius: 12px;
+        }
+        .btn-primary {
+            background-color: #6366F1;
+            color: white;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 12px 24px;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #4F46E5;
+        }
+        .btn-secondary {
+            background-color: #333333;
+            color: #E0E0E0;
+            font-weight: 500;
+            border-radius: 8px;
+            padding: 8px 16px;
+            border: 1px solid #444444;
+            transition: background-color 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #444444;
+        }
+        .input-group label {
+            color: #9E9E9E;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .input-field {
+            background-color: #222222;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            color: #E0E0E0;
+            padding: 10px 12px;
+            width: 100%;
+        }
+        .slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #6366F1;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .slider-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #444444;
+            border-radius: 9999px;
+        }
+        .tooltip {
+            @apply invisible absolute;
+        }
+        .has-tooltip:hover .tooltip {
+            @apply visible z-50;
+        }
+        
+        /* Custom slider styles */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        
+        /* Hide number input spinners */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        input[type="range"]::-webkit-slider-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #444444;
+            border-radius: 9999px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #6366F1;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #E0E0E0;
+        }
+        
+        input[type="range"]::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #444444;
+            border-radius: 9999px;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #6366F1;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #E0E0E0;
+        }
+        
+        /* Upload area styles */
+        .upload-area {
+            background-color: #1A1A1A;
+            border: 2px dashed #444444;
+            border-radius: 8px;
+            color: #E0E0E0;
+            padding: 10px 12px;
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            border-color: #6366F1;
+            background-color: #222222;
+            transform: scale(1.02);
+        }
+        
+        .upload-area.dragover {
+            border-color: #6366F1;
+            background-color: #222222;
+            transform: scale(1.05);
+        }
+        
+        /* Hidden file input */
+        .file-input {
+            display: none;
+        }
+        
+        /* Canvas containers */
+        .canvas-container {
+            aspect-ratio: 1;
+            background-color: #222222;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .canvas-container canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 16px;
+        }
+        
+        .modal-content {
+            background-color: #1A1A1A;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        /* Spinner styles */
+        .spinner {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+        
+        .spinner-content {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #444444;
+            border-top: 4px solid #6366F1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Main app container */
+        .main-app {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
-  <!-- Spinner -->
-  <div id="spinner" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50">
-    <div class="w-12 h-12 border-4 border-slate-600 border-t-indigo-500 rounded-full animate-spin"></div>
-  </div>
+<body class="p-4 sm:p-6 lg:p-8">
+<!-- Spinner -->
+<div id="spinner" class="spinner">
+    <div class="spinner-content"></div>
+</div>
 
-  <!-- Upload Screen -->
-  <div id="uploadScreen" class="flex items-center justify-center min-h-screen">
-    <div class="upload-card bg-slate-800 border-2 border-dashed border-slate-600 rounded-2xl p-12 text-center cursor-pointer transition-all duration-300 hover:border-indigo-500 hover:bg-slate-700 hover:scale-105 hover:shadow-xl" id="uploadCard">
-      <div class="text-6xl text-slate-400 mb-4 transition-colors duration-300 hover:text-indigo-400">↑</div>
-      <div class="text-xl font-medium text-slate-300 transition-colors duration-300">Upload Image</div>
-      <div class="text-sm text-slate-500 mt-2">PNG, JPEG, or BMP files</div>
-    </div>
-  </div>
+<!-- Hidden File Input -->
+<input type="file" id="fileInput" accept="image/png,image/jpeg,image/bmp" class="file-input" max="10485760" />
 
-  <!-- Hidden File Input -->
-  <input type="file" id="fileInput" accept="image/png,image/jpeg,image/bmp" class="hidden" />
+<!-- Main App Container -->
+<div id="app" class="main-app">
+<div class="max-w-7xl mx-auto">
+<header class="flex justify-between items-center mb-8">
+<h1 class="text-3xl font-bold text-white">ColorStack</h1>
+<div class="flex items-center gap-4">
+<div class="relative has-tooltip">
+<button id="instructionsBtn" class="btn-secondary flex items-center gap-2">
+<span class="material-icons">info_outline</span>
+            View Slicer Instructions
+        </button>
+<div class="tooltip -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded">Learn how to configure your slicer</div>
+</div>
+<div class="relative has-tooltip">
+<button id="newImageBtn" class="btn-secondary flex items-center gap-2">
+<span class="material-icons">add_photo_alternate</span>
+            New Image
+        </button>
+<div class="tooltip -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded">Upload a new image</div>
+</div>
+<div class="relative has-tooltip">
+<button id="exportBtn" class="btn-primary flex items-center gap-2">
+<span class="material-icons">file_download</span>
+            Export STL
+        </button>
+<div class="tooltip -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap">Download the 3D model file</div>
+</div>
+</div>
+</header>
 
-  <!-- Main App Container -->
-  <div id="app" class="max-w-7xl mx-auto w-full h-screen flex gap-6 p-6">
-    <!-- Left Panel - Canvas Area -->
-    <div class="flex-1 flex flex-col gap-4">
-      <!-- Header -->
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-100">ColorStack</h1>
-          <p class="text-slate-400 text-sm">3D Color Processing</p>
-        </div>
-        <div class="flex gap-2">
-          <button id="instructionsBtn" class="px-4 py-2 bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-all hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">Instructions</button>
-          <button id="newImageBtn" class="px-4 py-2 bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-all hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">New Image</button>
-        </div>
-      </div>
+<!-- Upload Area (shown when no image is loaded) -->
+<div id="uploadArea" class="mb-8">
+<main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 flex flex-col gap-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="card p-6">
+<h2 class="text-lg font-semibold mb-4">Upload Image</h2>
+<div class="upload-area" id="uploadCard">
+<div class="text-6xl text-gray-400 mb-4">↑</div>
+<div class="text-xl font-medium text-gray-300 mb-2">Upload Image</div>
+<div class="text-sm text-gray-500 mb-4">PNG, JPEG, or BMP files</div>
+<div class="text-xs text-gray-600">Drag and drop or click to browse</div>
+</div>
+</div>
+<div class="card p-6">
+<h2 class="text-lg font-semibold mb-4">Instructions</h2>
+<div class="space-y-4 text-gray-300">
+<div class="flex items-start gap-3">
+<span class="material-icons text-indigo-400 mt-1">upload</span>
+<div>
+<h3 class="font-medium text-white">Upload Your Image</h3>
+<p class="text-sm text-gray-400">Click the upload area or drag and drop an image file to get started.</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-icons text-indigo-400 mt-1">palette</span>
+<div>
+<h3 class="font-medium text-white">Color Processing</h3>
+<p class="text-sm text-gray-400">ColorStack will automatically detect colors and create a palette for your 3D print.</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-icons text-indigo-400 mt-1">3d_rotation</span>
+<div>
+<h3 class="font-medium text-white">Export STL</h3>
+<p class="text-sm text-gray-400">Generate a multi-color STL file ready for your 3D printer.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="flex flex-col gap-6">
+<div class="card p-6">
+<h2 class="text-lg font-semibold mb-4">Supported Formats</h2>
+<div class="space-y-3">
+<div class="flex items-center gap-3">
+<span class="material-icons text-green-400">check_circle</span>
+<span class="text-gray-300">PNG files</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-icons text-green-400">check_circle</span>
+<span class="text-gray-300">JPEG files</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-icons text-green-400">check_circle</span>
+<span class="text-gray-300">BMP files</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-icons text-blue-400">info</span>
+<span class="text-gray-300">Max 10MB file size</span>
+</div>
+</div>
+</div>
+<div class="card p-6">
+<h2 class="text-lg font-semibold mb-4">Tips</h2>
+<div class="space-y-3 text-sm text-gray-300">
+<p>• Use high contrast images for best results</p>
+<p>• Simple designs work better than complex photos</p>
+<p>• Avoid images with too many similar colors</p>
+<p>• Test with different color band settings</p>
+</div>
+</div>
+</aside>
+</main>
+</div>
 
-      <!-- Canvas Grid -->
-      <div class="grid grid-cols-2 gap-4 flex-1 min-h-0">
-        <!-- Original Canvas Container -->
-        <div class="bg-slate-800 rounded-xl shadow-lg p-4 flex flex-col">
-          <div class="text-sm font-medium text-slate-300 mb-3">Original Image</div>
-          <div class="flex-1 flex items-center justify-center bg-slate-700 rounded-lg overflow-hidden">
-            <canvas id="origCanvas" class="max-w-full max-h-full object-contain"></canvas>
-          </div>
-        </div>
-        
-        <!-- Processed Canvas Container -->
-        <div class="bg-slate-800 rounded-xl shadow-lg p-4 flex flex-col">
-          <div class="text-sm font-medium text-slate-300 mb-3">Processed Preview</div>
-          <div class="flex-1 flex items-center justify-center bg-slate-700 rounded-lg overflow-hidden">
-            <canvas id="procCanvas" class="max-w-full max-h-full object-contain"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
+<!-- Main Content (hidden when no image is loaded) -->
+<div id="mainContent" class="hidden">
+<main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 flex flex-col gap-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="card p-6">
+<h2 class="text-lg font-semibold mb-4">Original Image</h2>
+<div class="canvas-container">
+<canvas id="origCanvas" class="rounded-lg object-cover w-full h-full"></canvas>
+</div>
+</div>
+<div class="card p-6">
+<h2 class="text-lg font-semibold mb-4">Processed Preview</h2>
+<div class="canvas-container">
+<canvas id="procCanvas" class="rounded-lg object-cover w-full h-full"></canvas>
+</div>
+</div>
+</div>
+<div class="card p-6">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-lg font-semibold">Layer Preview</h2>
+<span class="text-sm text-gray-400">Layer <span id="layerValue">1</span> / <span id="maxLayers">4</span></span>
+</div>
+<div class="relative has-tooltip flex items-center gap-4">
+<span class="material-icons text-gray-400">layers</span>
+<input id="layerSlider" class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-track" max="4" min="1" type="range" value="1"/>
+<div class="tooltip -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded">Scrub through layers</div>
+</div>
+</div>
+</div>
+<aside class="flex flex-col gap-6">
+<div class="card p-6">
+<h2 class="text-lg font-semibold mb-4">Primary Controls</h2>
+<div class="space-y-6">
+<div class="input-group">
+<div class="flex justify-between items-center">
+<label for="numBands">Z-Bands (Colors)</label>
+<div class="relative has-tooltip">
+<span class="material-icons text-gray-400 text-base cursor-help">help_outline</span>
+<div class="tooltip -top-8 right-0 px-2 py-1 bg-gray-900 text-white text-xs rounded w-40">Number of color layers in the final model.</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<input id="numBands" class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-track" max="8" min="2" type="range" value="4"/>
+<span id="numBandsValue" class="font-semibold text-white">4</span>
+</div>
+</div>
+<div>
+<h3 class="text-base font-medium text-gray-300 mb-3">Layer Parameters</h3>
+<div class="grid grid-cols-3 gap-3">
+<div class="relative has-tooltip">
+<label class="text-xs text-gray-400 block mb-1" for="layerHeight">Layer Height</label>
+            <input id="layerHeight" class="input-field text-sm p-2 text-center" type="number" min="0.1" max="10" step="0.1" value="0.2"/>
+<div class="tooltip -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded">Height of each layer</div>
+</div>
+<div class="relative has-tooltip">
+<label class="text-xs text-gray-400 block mb-1" for="baseThickness">Base Thick.</label>
+            <input id="baseThickness" class="input-field text-sm p-2 text-center" type="number" min="0.1" max="50" step="0.1" value="1"/>
+<div class="tooltip -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap">Base thickness</div>
+</div>
+<div class="relative has-tooltip">
+<label class="text-xs text-gray-400 block mb-1" for="bandThickness">Band Thick.</label>
+            <input id="bandThickness" class="input-field text-sm p-2 text-center" type="number" min="0.1" max="50" step="0.1" value="1"/>
+<div class="tooltip -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap">Color band thickness</div>
+</div>
+</div>
+</div>
+<div>
+<h3 class="text-base font-medium text-gray-300 mb-3">Model Dimensions</h3>
+<div class="grid grid-cols-2 gap-3">
+<div class="relative has-tooltip">
+<label class="text-xs text-gray-400 block mb-1" for="xSize">X Size</label>
+            <input id="xSize" class="input-field text-sm p-2 text-center" type="number" min="10" max="1000" step="1" value="150"/>
+<div class="tooltip -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded">Width of the model</div>
+</div>
+<div class="relative has-tooltip">
+<label class="text-xs text-gray-400 block mb-1" for="ySize">Y Size</label>
+            <input id="ySize" class="input-field text-sm p-2 text-center" type="number" min="10" max="1000" step="1" value="120"/>
+<div class="tooltip -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded">Depth of the model</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="card p-6">
+<h2 class="text-lg font-semibold mb-4">Color Palette</h2>
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center bg-gray-800 p-1 rounded-lg">
+<button id="suggestedPaletteBtn" class="px-3 py-1 text-sm font-medium rounded-md bg-indigo-600 text-white">Suggested</button>
+<button id="myPaletteBtn" class="px-3 py-1 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700">My Palette</button>
+</div>
+<div class="relative has-tooltip">
+<button id="invertPaletteBtn" class="p-2 rounded-full hover:bg-gray-700">
+<span class="material-icons text-gray-400">swap_vert</span>
+</button>
+<div class="tooltip -top-8 right-0 px-2 py-1 bg-gray-900 text-white text-xs rounded">Reverse color order</div>
+</div>
+</div>
+<div id="palette" class="grid grid-cols-8 gap-2">
+<!-- Palette colors will be dynamically generated here -->
+</div>
+</div>
+<div class="card p-6">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-lg font-semibold">My Filaments</h2>
+<div class="relative has-tooltip">
+<button id="addFilamentBtn" class="text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 text-sm">
+<span class="material-icons text-lg">add_circle_outline</span>
+                        Add New
+                    </button>
+<div class="tooltip -top-8 right-0 px-2 py-1 bg-gray-900 text-white text-xs rounded">Add a new filament</div>
+</div>
+</div>
+<div id="myFilamentsList" class="grid grid-cols-3 sm:grid-cols-4 gap-4">
+<!-- My filaments will be dynamically generated here -->
+</div>
+</div>
+</aside>
+</main>
+</div>
+</div>
+</div>
 
-    <!-- Right Panel - Controls -->
-    <div class="w-96 bg-slate-800 rounded-xl shadow-lg p-6 flex flex-col gap-4 overflow-y-auto">
-      <!-- Parameters Section -->
-      <div class="bg-slate-700/50 rounded-lg p-4 space-y-3">
-        <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide">Parameters</h2>
-        
-        <!-- Z-Bands Slider -->
-        <div class="space-y-2">
-          <label for="numBands" class="flex justify-between items-center text-xs font-medium text-slate-300">
-            Z-Bands <span id="numBandsValue" class="text-indigo-400 font-semibold">4</span>
-          </label>
-          <input type="range" id="numBands" value="4" min="2" max="8" 
-                 class="w-full h-1.5 bg-slate-600 rounded-lg appearance-none cursor-pointer slider">
-        </div>
+<!-- Modal -->
+<div id="modal" class="modal">
+<div id="modalContent" class="modal-content">
+<h2 id="modalTitle" class="text-2xl font-bold text-white text-center mb-6"></h2>
+<div id="modalBody" class="space-y-4"></div>
+<button id="modalCloseBtn" class="w-full mt-8 px-4 py-3 bg-gray-600 text-gray-200 font-medium rounded-lg transition-all hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">Close</button>
+</div>
+</div>
 
-        <!-- Layer Height -->
-        <div class="space-y-1">
-          <label for="layerHeight" class="block text-xs font-medium text-slate-300">Layer Height (mm)</label>
-          <input type="number" id="layerHeight" value="0.2" step="0.01" 
-                 class="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded-lg text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-        </div>
+<!-- Feedback Button -->
+<a href="https://tally.so/r/placeholder" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 left-6 z-50 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-3 rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2 border border-gray-700 hover:border-gray-600">
+    <span class="material-icons text-lg">feedback</span>
+    <span class="text-sm font-medium">Feedback</span>
+</a>
 
-        <!-- Base Thickness -->
-        <div class="space-y-1">
-          <label for="baseThickness" class="block text-xs font-medium text-slate-300">Base Thickness (Layers)</label>
-          <input type="number" id="baseThickness" value="3" min="1" max="10" 
-                 class="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded-lg text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-        </div>
-
-        <!-- Band Thickness -->
-        <div class="space-y-1">
-          <label for="bandThickness" class="block text-xs font-medium text-slate-300">Band Thickness (Layers)</label>
-          <input type="number" id="bandThickness" value="2" min="1" max="10" 
-                 class="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded-lg text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-        </div>
-      </div>
-
-      <!-- Dimensions Section -->
-      <div class="bg-slate-700/50 rounded-lg p-4 space-y-3">
-        <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide">Dimensions</h2>
-        
-        <div class="grid grid-cols-2 gap-3">
-          <div class="space-y-1">
-            <label for="xSize" class="block text-xs font-medium text-slate-300">X Size (mm)</label>
-            <input type="number" id="xSize" value="200" 
-                   class="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded-lg text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-          </div>
-          
-          <div class="space-y-1">
-            <label for="ySize" class="block text-xs font-medium text-slate-300">Y Size (mm)</label>
-            <input type="number" id="ySize" value="200" 
-                   class="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded-lg text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-          </div>
-        </div>
-      </div>
-
-      <!-- Preview Section -->
-      <div class="bg-slate-700/50 rounded-lg p-4 space-y-3">
-        <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide">Preview</h2>
-        
-        <div class="space-y-2">
-          <label for="layerSlider" class="flex justify-between items-center text-xs font-medium text-slate-300">
-            Z-Band <span id="layerValue" class="text-indigo-400 font-semibold">3</span>
-          </label>
-          <input type="range" id="layerSlider" value="3" min="0" max="3" 
-                 class="w-full h-1.5 bg-slate-600 rounded-lg appearance-none cursor-pointer slider">
-          
-          <div class="flex items-center gap-2 pt-1">
-            <input type="checkbox" id="singleLayerToggle" 
-                   class="w-9 h-5 bg-slate-600 rounded-full appearance-none cursor-pointer relative transition-colors checked:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <label for="singleLayerToggle" class="text-xs text-slate-400 cursor-pointer">Single Layer Preview</label>
-          </div>
-        </div>
-      </div>
-
-      <!-- Palette Section -->
-      <div class="bg-slate-700/50 rounded-lg p-4 space-y-3">
-        <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide">Color Palette</h2>
-        
-        <div class="flex gap-1">
-          <button id="suggestedPaletteBtn" class="flex-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Suggested</button>
-          <button id="myPaletteBtn" class="flex-1 px-3 py-1.5 bg-slate-600 text-slate-200 text-xs font-medium rounded-md transition-all hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">My Palette</button>
-          <button id="invertPaletteBtn" title="Invert Palette" class="px-3 py-1.5 bg-slate-600 text-slate-200 text-xs font-medium rounded-md transition-all hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">↕</button>
-        </div>
-        
-        <div class="palette flex gap-2 overflow-x-auto p-2 bg-slate-600 rounded-lg" id="palette"></div>
-      </div>
-
-      <!-- My Filaments Section -->
-      <div id="myFilamentsSection" class="bg-slate-700/50 rounded-lg p-4 space-y-3">
-        <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide">My Filaments</h2>
-        
-        <div class="flex gap-2 items-center">
-          <div class="relative">
-            <div id="colorPickerTrigger" class="w-10 h-10 bg-slate-600 border border-slate-500 rounded-lg cursor-pointer transition-all hover:scale-105 flex items-center justify-center">
-              <div id="selectedColor" class="w-6 h-6 rounded-md border border-slate-400"></div>
+<!-- Footer -->
+<footer class="mt-16 py-8 border-t border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="text-gray-400 text-sm">
+                © 2024 ColorStack. Free HueForge alternative for color-layered 3D printing.
             </div>
-            <input type="hidden" id="newFilamentColor" value="#ffffff">
-            <div id="customColorPicker" class="absolute top-full left-0 mt-2 bg-slate-700 border border-slate-600 rounded-lg shadow-xl p-4 z-50 hidden min-w-64">
-              <div class="grid grid-cols-8 gap-2 mb-4">
-                <!-- Predefined colors -->
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff0000" data-color="#ff0000"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff8000" data-color="#ff8000"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ffff00" data-color="#ffff00"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #80ff00" data-color="#80ff00"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #00ff00" data-color="#00ff00"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #00ff80" data-color="#00ff80"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #00ffff" data-color="#00ffff"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #0080ff" data-color="#0080ff"></div>
-                
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #0000ff" data-color="#0000ff"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #8000ff" data-color="#8000ff"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff00ff" data-color="#ff00ff"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff0080" data-color="#ff0080"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff4000" data-color="#ff4000"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ffbf00" data-color="#ffbf00"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #80ff80" data-color="#80ff80"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #00ff40" data-color="#00ff40"></div>
-                
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #40ff80" data-color="#40ff80"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #40ffff" data-color="#40ffff"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #4080ff" data-color="#4080ff"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #4000ff" data-color="#4000ff"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #8040ff" data-color="#8040ff"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff40ff" data-color="#ff40ff"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff4080" data-color="#ff4080"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ff8040" data-color="#ff8040"></div>
-                
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #ffffff" data-color="#ffffff"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #cccccc" data-color="#cccccc"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #999999" data-color="#999999"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #666666" data-color="#666666"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #333333" data-color="#333333"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #000000" data-color="#000000"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #8b4513" data-color="#8b4513"></div>
-                <div class="w-8 h-8 rounded cursor-pointer border border-slate-500 hover:scale-110 transition-transform" style="background: #a0522d" data-color="#a0522d"></div>
-              </div>
-              <div class="text-sm text-slate-300 mb-2 font-medium">Custom Color:</div>
-              <input type="text" id="customColorInput" placeholder="#ffffff" class="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-            </div>
-          </div>
-          <button id="addFilamentBtn" class="flex-1 px-3 py-2 bg-slate-600 text-slate-200 text-xs font-medium rounded-lg transition-all hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">Add</button>
+                                <div class="flex items-center gap-6">
+                        <a href="/privacy" class="text-gray-400 hover:text-white transition-colors duration-200 flex items-center gap-2">
+                            <span class="material-icons text-lg">privacy_tip</span>
+                            <span class="text-sm font-medium">Privacy Policy</span>
+                        </a>
+                        <a href="/terms" class="text-gray-400 hover:text-white transition-colors duration-200 flex items-center gap-2">
+                            <span class="material-icons text-lg">description</span>
+                            <span class="text-sm font-medium">Terms of Service</span>
+                        </a>
+                        <a href="https://discord.gg/P4VyGBvzZS" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition-colors duration-200 flex items-center gap-2">
+                            <span class="material-icons text-lg">chat</span>
+                            <span class="text-sm font-medium">Join our Discord</span>
+                        </a>
+                    </div>
         </div>
-        
-        <div id="myFilamentsList" class="flex flex-wrap gap-3"></div>
-      </div>
-
-      <!-- Export Section -->
-      <div class="mt-auto pt-4 border-t border-slate-600">
-        <button id="exportBtn" class="w-full px-4 py-3 bg-green-600 text-white font-semibold rounded-lg transition-all hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">Export STL</button>
-      </div>
     </div>
-  </div>
+</footer>
 
-  <!-- Modal -->
-  <div id="modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div id="modalContent" class="bg-slate-800 rounded-xl shadow-2xl p-8 max-w-md w-full max-h-[80vh] overflow-y-auto">
-      <h2 id="modalTitle" class="text-2xl font-bold text-slate-100 text-center mb-6"></h2>
-      <div id="modalBody" class="space-y-4"></div>
-      <button id="modalCloseBtn" class="w-full mt-8 px-4 py-3 bg-slate-600 text-slate-200 font-medium rounded-lg transition-all hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">Close</button>
-    </div>
-  </div>
-
-  <!-- Custom Slider Styles -->
-  <style>
-    .slider::-webkit-slider-thumb {
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      background: #6366f1;
-      border: 2px solid #f8fafc;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    
-    .slider::-webkit-slider-thumb:hover {
-      background: #4f46e5;
-      transform: scale(1.1);
-    }
-    
-    .slider::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      background: #6366f1;
-      border: 2px solid #f8fafc;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    
-    .slider::-moz-range-thumb:hover {
-      background: #4f46e5;
-      transform: scale(1.1);
-    }
-    
-    #singleLayerToggle::before {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 13px;
-      height: 13px;
-      background: #f8fafc;
-      border-radius: 50%;
-      transition: transform 0.3s;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    
-    #singleLayerToggle:checked::before {
-      transform: translateX(16px);
-    }
-
-    /* Filament Icon Styles */
-    .filament-icon {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      transition: all 0.2s ease;
-    }
-
-    .filament-icon:hover {
-      transform: scale(1.05);
-    }
-
-    .filament-outer-ring {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: var(--filament-color);
-      border: 3px solid #1e293b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .filament-inner-ring {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: transparent;
-      border: none;
-    }
-
-    .filament-center-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #1e293b;
-      border: 1px solid #475569;
-    }
-
-    .filament-label {
-      font-size: 10px;
-      font-weight: 500;
-      color: #f8fafc;
-      text-align: center;
-      line-height: 1;
-    }
-
-    .filament-remove-btn {
-      position: absolute;
-      top: -6px;
-      right: -6px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #ef4444;
-      color: #f8fafc;
-      border: 2px solid #f8fafc;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: bold;
-      line-height: 1;
-      opacity: 0;
-      transition: all 0.2s ease;
-      transform: scale(0.8);
-    }
-
-    .filament-icon:hover .filament-remove-btn {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    .filament-remove-btn:hover {
-      background: #dc2626;
-      transform: scale(1.1);
-    }
-
-    /* Custom Color Picker Styles */
-    #colorPickerTrigger {
-      position: relative;
-      overflow: hidden;
-    }
-
-    #colorPickerTrigger::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(45deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, #ff00ff, #ff0080);
-      opacity: 0.1;
-      transition: opacity 0.2s ease;
-    }
-
-    #colorPickerTrigger:hover::before {
-      opacity: 0.2;
-    }
-
-    #selectedColor {
-      position: relative;
-      z-index: 1;
-      transition: all 0.2s ease;
-    }
-
-    #colorPickerTrigger:hover #selectedColor {
-      transform: scale(1.1);
-    }
-
-    /* Color picker input styling */
-    #customColorInput {
-      width: 100%;
-      height: 100%;
-    }
-
-    #customColorInput::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-
-    #customColorInput::-webkit-color-swatch {
-      border: none;
-      border-radius: 0;
-    }
-
-    #customColorInput::-moz-color-swatch {
-      border: none;
-      border-radius: 0;
-    }
-  </style>
-
-  <script src="js/main.js" type="module"></script>
+<script src="js/main.js" type="module"></script>
 </body>
 </html>
