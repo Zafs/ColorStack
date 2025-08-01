@@ -1,0 +1,26 @@
+{
+  "name": "colorstack",
+  "version": "1.0.0",
+  "description": "Free HueForge Alternative for Color-Layered 3D Printing",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static site - no build required'",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "3d-printing",
+    "stl",
+    "color-layers",
+    "hueforge-alternative",
+    "web-app"
+  ],
+  "author": "ColorStack",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+} 
