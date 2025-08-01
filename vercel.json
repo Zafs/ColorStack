@@ -16,6 +16,14 @@
       "dest": "/terms.html"
     },
     {
+      "src": "/manifest.json",
+      "dest": "/config/manifest.json"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "/config/robots.txt"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
