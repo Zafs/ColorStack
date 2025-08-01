@@ -1,24 +1,59 @@
 // Service Worker for ColorStack
-const CACHE_NAME = 'colorstack-v2.1.0';
-const STATIC_CACHE = 'colorstack-static-v2.1.0';
-const DYNAMIC_CACHE = 'colorstack-dynamic-v2.1.0';
+const CACHE_NAME = 'colorstack-v2.1.2';
+const STATIC_CACHE = 'colorstack-static-v2.1.2';
+const DYNAMIC_CACHE = 'colorstack-dynamic-v2.1.2';
 
-// Files to cache immediately
+// Version configuration for cache busting
+const VERSION_CONFIG = {
+    version: '2.1.2',
+    assets: {
+        'js/main.js': '2.1.2',
+        'js/ui.js': '2.1.2', 
+        'js/image_processor.js': '2.1.2',
+        'js/stl_exporter.js': '2.1.2',
+        'js/main-fallback.js': '2.1.2',
+        'Logo.svg': '2.1.2',
+        'manifest.json': '2.1.2'
+    },
+    externals: {
+        'https://cdn.tailwindcss.com?plugins=forms,container-queries': '2.1.2',
+        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap': '2.1.2',
+        'https://fonts.googleapis.com/icon?family=Material+Icons': '2.1.2'
+    }
+};
+
+// Cache busting utility
+const getVersionedUrl = (path) => {
+    if (path.startsWith('http')) {
+        const version = VERSION_CONFIG.externals[path];
+        if (version) {
+            const separator = path.includes('?') ? '&' : '?';
+            return `${path}${separator}v=${version}`;
+        }
+        return path;
+    } else {
+        const version = VERSION_CONFIG.assets[path] || VERSION_CONFIG.version;
+        const separator = path.includes('?') ? '&' : '?';
+        return `${path}${separator}v=${version}`;
+    }
+};
+
+// Files to cache immediately (with versioned URLs)
 const STATIC_FILES = [
   '/',
   '/index.html',
-  '/js/main.js',
-  '/js/main-fallback.js',
-  '/js/image_processor.js',
-  '/js/stl_exporter.js',
-  '/js/ui.js',
-  '/Logo.svg',
-  '/manifest.json',
   '/privacy.html',
   '/terms.html',
-  'https://cdn.tailwindcss.com?plugins=forms,container-queries',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
-  'https://fonts.googleapis.com/icon?family=Material+Icons'
+  getVersionedUrl('/js/main.js'),
+  getVersionedUrl('/js/main-fallback.js'),
+  getVersionedUrl('/js/image_processor.js'),
+  getVersionedUrl('/js/stl_exporter.js'),
+  getVersionedUrl('/js/ui.js'),
+  getVersionedUrl('/Logo.svg'),
+  getVersionedUrl('/manifest.json'),
+  getVersionedUrl('https://cdn.tailwindcss.com?plugins=forms,container-queries'),
+  getVersionedUrl('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'),
+  getVersionedUrl('https://fonts.googleapis.com/icon?family=Material+Icons')
 ];
 
 // Install event - cache static files
@@ -97,8 +132,9 @@ self.addEventListener('fetch', event => {
             });
         })
     );
-  } else if (url.pathname.startsWith('/js/') || url.pathname.startsWith('/css/')) {
-    // JavaScript and CSS files - cache first, then network
+  } else if (url.pathname.startsWith('/js/') || url.pathname.startsWith('/css/') || 
+             url.pathname.endsWith('.svg') || url.pathname.endsWith('.json')) {
+    // JavaScript, CSS, SVG, and JSON files - cache first, then network
     event.respondWith(
       caches.match(request)
         .then(response => {
