@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
     
     <!-- Primary Meta Tags -->
     <title>ColorStack - Free HueForge Alternative for Color-Layered 3D Printing</title>
@@ -120,27 +120,56 @@
     }
     </script>
 <style type="text/tailwindcss">
+        /* Base styles with fallbacks */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: #0A0A0A;
             color: #E0E0E0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
         }
+        
+        /* Fallback for browsers that don't support CSS Grid */
+        .grid-fallback {
+            display: block;
+        }
+        
+        @supports (display: grid) {
+            .grid-fallback {
+                display: grid;
+            }
+        }
+        
         .card {
             background-color: #1A1A1A;
             border: 1px solid #2A2A2A;
             border-radius: 12px;
+            -webkit-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+        
         .btn-primary {
             background-color: #6366F1;
             color: white;
             font-weight: 600;
             border-radius: 8px;
             padding: 12px 24px;
-            transition: background-color 0.3s;
+            -webkit-transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease;
+            border: none;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
+        
         .btn-primary:hover {
             background-color: #4F46E5;
         }
+        
+        .btn-primary:active {
+            background-color: #4338CA;
+        }
+        
         .btn-secondary {
             background-color: #333333;
             color: #E0E0E0;
@@ -148,17 +177,27 @@
             border-radius: 8px;
             padding: 8px 16px;
             border: 1px solid #444444;
-            transition: background-color 0.3s;
+            -webkit-transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
+        
         .btn-secondary:hover {
             background-color: #444444;
         }
+        
+        .btn-secondary:active {
+            background-color: #555555;
+        }
+        
         .input-group label {
             color: #9E9E9E;
             font-size: 0.875rem;
             margin-bottom: 0.5rem;
             display: block;
         }
+        
         .input-field {
             background-color: #222222;
             border: 1px solid #333333;
@@ -166,8 +205,43 @@
             color: #E0E0E0;
             padding: 10px 12px;
             width: 100%;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            font-size: 14px;
         }
-        .slider-thumb {
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #6366F1;
+            -webkit-box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        /* Enhanced slider styles with better cross-browser support */
+        input[type="range"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: #444444;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #444444;
+            border-radius: 2px;
+            border: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 16px;
@@ -175,27 +249,29 @@
             background: #6366F1;
             cursor: pointer;
             border-radius: 50%;
+            border: 2px solid #E0E0E0;
+            -webkit-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-        .slider-track {
+        
+        input[type="range"]::-moz-range-track {
             width: 100%;
             height: 4px;
             cursor: pointer;
             background: #444444;
-            border-radius: 9999px;
-        }
-        .tooltip {
-            @apply invisible absolute;
-        }
-        .has-tooltip:hover .tooltip {
-            @apply visible z-50;
+            border-radius: 2px;
+            border: none;
         }
         
-        /* Custom slider styles */
-        input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            background: transparent;
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #6366F1;
             cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #E0E0E0;
+            -moz-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
         
         /* Hide number input spinners */
@@ -209,43 +285,7 @@
             -moz-appearance: textfield;
         }
         
-        input[type="range"]::-webkit-slider-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #444444;
-            border-radius: 9999px;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #6366F1;
-            cursor: pointer;
-            border-radius: 50%;
-            border: 2px solid #E0E0E0;
-        }
-        
-        input[type="range"]::-moz-range-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #444444;
-            border-radius: 9999px;
-        }
-        
-        input[type="range"]::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            background: #6366F1;
-            cursor: pointer;
-            border-radius: 50%;
-            border: 2px solid #E0E0E0;
-        }
-        
-        /* Upload area styles */
+        /* Upload area styles with better touch support */
         .upload-area {
             background-color: #1A1A1A;
             border: 2px dashed #444444;
@@ -254,23 +294,42 @@
             padding: 10px 12px;
             width: 100%;
             aspect-ratio: 1;
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
             flex-direction: column;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
             align-items: center;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s;
+            -webkit-transition: all 0.3s ease;
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         
         .upload-area:hover {
             border-color: #6366F1;
             background-color: #222222;
+            -webkit-transform: scale(1.02);
+            -ms-transform: scale(1.02);
             transform: scale(1.02);
         }
         
         .upload-area.dragover {
             border-color: #6366F1;
             background-color: #222222;
+            -webkit-transform: scale(1.05);
+            -ms-transform: scale(1.05);
             transform: scale(1.05);
         }
         
@@ -279,33 +338,59 @@
             display: none;
         }
         
-        /* Canvas containers */
+        /* Canvas containers with better mobile support */
         .canvas-container {
             aspect-ratio: 1;
             background-color: #222222;
             border-radius: 8px;
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
             align-items: center;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
             justify-content: center;
             overflow: hidden;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         
         .canvas-container canvas {
             max-width: 100%;
             max-height: 100%;
+            -o-object-fit: contain;
             object-fit: contain;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         
-        /* Modal styles */
+        /* Modal styles with better mobile support */
         .modal {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background-color: rgba(0, 0, 0, 0.8);
             display: none;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
             align-items: center;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
             justify-content: center;
             z-index: 2000;
             padding: 16px;
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
         }
         
         .modal-content {
@@ -316,16 +401,25 @@
             width: 100%;
             max-height: 80vh;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         /* Spinner styles */
         .spinner {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background-color: rgba(0, 0, 0, 0.5);
+            -webkit-backdrop-filter: blur(4px);
             backdrop-filter: blur(4px);
             display: none;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
             align-items: center;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
             justify-content: center;
             z-index: 3000;
         }
@@ -336,7 +430,13 @@
             border: 4px solid #444444;
             border-top: 4px solid #6366F1;
             border-radius: 50%;
+            -webkit-animation: spin 1s linear infinite;
             animation: spin 1s linear infinite;
+        }
+        
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
         }
         
         @keyframes spin {
@@ -350,9 +450,157 @@
             margin: 0 auto;
             padding: 16px;
         }
+        
+        /* Responsive design improvements */
+        @media (max-width: 768px) {
+            .main-app {
+                padding: 8px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                margin: 16px;
+            }
+            
+            .btn-primary, .btn-secondary {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-app {
+                padding: 4px;
+            }
+            
+            .modal-content {
+                padding: 16px;
+                margin: 8px;
+            }
+            
+            .btn-primary, .btn-secondary {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+        }
+        
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .btn-primary, .btn-secondary {
+                min-height: 44px;
+            }
+            
+            input[type="range"]::-webkit-slider-thumb {
+                width: 20px;
+                height: 20px;
+            }
+            
+            input[type="range"]::-moz-range-thumb {
+                width: 20px;
+                height: 20px;
+            }
+        }
+        
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .card {
+                border-width: 2px;
+            }
+            
+            .btn-primary {
+                border: 2px solid #ffffff;
+            }
+            
+            .btn-secondary {
+                border-width: 2px;
+            }
+        }
+        
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            .btn-primary, .btn-secondary, .upload-area {
+                -webkit-transition: none;
+                transition: none;
+            }
+            
+            .spinner-content {
+                -webkit-animation: none;
+                animation: none;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #0A0A0A;
+                color: #E0E0E0;
+            }
+        }
+        
+        /* Light mode fallback */
+        @media (prefers-color-scheme: light) {
+            body {
+                background-color: #0A0A0A;
+                color: #E0E0E0;
+            }
+        }
+        
+        /* Tooltip styles with better accessibility */
+        .tooltip {
+            visibility: hidden;
+            position: absolute;
+            z-index: 50;
+            background-color: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            -webkit-transition: opacity 0.2s ease;
+            transition: opacity 0.2s ease;
+        }
+        
+        .has-tooltip:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Focus styles for better accessibility */
+        .btn-primary:focus,
+        .btn-secondary:focus,
+        .input-field:focus {
+            outline: 2px solid #6366F1;
+            outline-offset: 2px;
+        }
+        
+        /* Skip link for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: #6366F1;
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 1000;
+        }
+        
+        .skip-link:focus {
+            top: 6px;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-6 lg:p-8">
+<!-- Skip link for accessibility -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
 <!-- Spinner -->
 <div id="spinner" class="spinner">
     <div class="spinner-content"></div>
@@ -365,7 +613,7 @@
 <div id="app" class="main-app">
 <div class="max-w-7xl mx-auto">
 <header class="flex justify-between items-center mb-8">
-<h1 class="text-3xl font-bold text-white">ColorStack</h1>
+<img src="Logo.svg" alt="ColorStack" class="h-8 md:h-10" />
 <div class="flex items-center gap-4">
 <div class="relative has-tooltip">
 <button id="instructionsBtn" class="btn-secondary flex items-center gap-2">
@@ -601,7 +849,7 @@
 </div>
 
 <!-- Feedback Button -->
-<a href="https://tally.so/r/placeholder" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 left-6 z-50 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-3 rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2 border border-gray-700 hover:border-gray-600">
+<a href="https://tally.so/r/placeholder" target="_blank" rel="noopener noreferrer" class="fixed bottom-32 left-6 z-50 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-3 rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2 border border-gray-700 hover:border-gray-600">
     <span class="material-icons text-lg">feedback</span>
     <span class="text-sm font-medium">Feedback</span>
 </a>
@@ -611,7 +859,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="text-gray-400 text-sm">
-                © 2024 ColorStack. Free HueForge alternative for color-layered 3D printing.
+                © 2024 ColorStack. Free browser-based tool for color-layered 3D printing.
             </div>
                                 <div class="flex items-center gap-6">
                         <a href="/privacy" class="text-gray-400 hover:text-white transition-colors duration-200 flex items-center gap-2">
@@ -631,6 +879,87 @@
     </div>
 </footer>
 
-<script src="js/main.js" type="module"></script>
+<!-- Polyfill for older browsers -->
+<script>
+// Feature detection and polyfills
+(function() {
+    'use strict';
+    
+    // Check for ES6 module support
+    if (!window.Promise) {
+        // Load Promise polyfill if needed
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js';
+        document.head.appendChild(script);
+    }
+    
+    // Check for fetch support
+    if (!window.fetch) {
+        // Load fetch polyfill if needed
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.2/dist/fetch.umd.js';
+        document.head.appendChild(script);
+    }
+    
+    // Check for Canvas support
+    if (!window.CanvasRenderingContext2D) {
+        console.warn('Canvas not supported in this browser');
+    }
+    
+    // Check for File API support
+    if (!window.FileReader) {
+        console.warn('File API not supported in this browser');
+    }
+    
+    // Check for Blob support
+    if (!window.Blob) {
+        console.warn('Blob API not supported in this browser');
+    }
+    
+    // Add touch event support for mobile devices
+    if ('ontouchstart' in window) {
+        document.body.classList.add('touch-device');
+    }
+    
+    // Add reduced motion support
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.body.classList.add('reduced-motion');
+    }
+    
+    // Add high contrast mode support
+    if (window.matchMedia && window.matchMedia('(prefers-contrast: high)').matches) {
+        document.body.classList.add('high-contrast');
+    }
+    
+    // Service Worker registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js')
+                .then(function(registration) {
+                    console.log('Service Worker registered successfully:', registration.scope);
+                    
+                    // Check for updates
+                    registration.addEventListener('updatefound', function() {
+                        var newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', function() {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New version available
+                                if (confirm('A new version of ColorStack is available. Would you like to update?')) {
+                                    newWorker.postMessage({type: 'SKIP_WAITING'});
+                                    window.location.reload();
+                                }
+                            }
+                        });
+                    });
+                })
+                .catch(function(error) {
+                    console.error('Service Worker registration failed:', error);
+                });
+        });
+    }
+})();
+</script>
+
+        <script src="js/main.js"></script>
 </body>
 </html>
