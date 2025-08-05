@@ -7,6 +7,25 @@
     let imageWorker; // Web Worker for image processing
 
     // ============================================================================
+    // UTILITY FUNCTIONS
+    // ============================================================================
+
+    /**
+     * Debounce utility function to prevent excessive function calls.
+     * @param {Function} func - The function to debounce
+     * @param {number} delay - The delay in milliseconds
+     * @returns {Function} The debounced function
+     */
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
+
+    // ============================================================================
     // IMAGE PROCESSOR FUNCTIONS (from image_processor.js)
     // ============================================================================
 
@@ -1719,7 +1738,7 @@
     function setupControlEventListeners() {
         try {
             if (domElements.numBandsInput) {
-                domElements.numBandsInput.addEventListener('input', handleNumBandsChange);
+                domElements.numBandsInput.addEventListener('input', debounce(handleNumBandsChange, 250));
             }
             if (domElements.layerHeightInput) {
                 domElements.layerHeightInput.addEventListener('input', handleSettingsChange);
