@@ -4,11 +4,11 @@
   "description": "Free HueForge Alternative for Color-Layered 3D Printing",
   "main": "index.html",
   "scripts": {
-    "dev": "npx serve .",
+    "dev": "npx serve public",
     "build": "echo 'Static site - no build required'",
     "deploy": "vercel --prod",
-    "lint": "eslint js/**/*.js",
-    "format": "prettier --write js/**/*.js"
+    "lint": "eslint public/js/**/*.js",
+    "format": "prettier --write public/js/**/*.js"
   },
   "keywords": [
     "3d-printing",

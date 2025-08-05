@@ -10,16 +10,16 @@ console.log(`🔄 Updating ColorStack to version ${VERSION}...`);
 
 // Files to update with version
 const filesToUpdate = [
-    'index.html',
-    'privacy.html', 
-    'terms.html',
-    'js/version.js',
-    'sw.js'
+    'public/index.html',
+    'public/privacy.html', 
+    'public/terms.html',
+    'public/js/version.js',
+    'public/sw.js'
 ];
 
 // Update version in version.js
 function updateVersionFile() {
-    const versionPath = 'js/version.js';
+    const versionPath = 'public/js/version.js';
     let content = fs.readFileSync(versionPath, 'utf8');
     
     // Update main version
@@ -37,7 +37,7 @@ function updateVersionFile() {
 
 // Update HTML files
 function updateHtmlFiles() {
-    const htmlFiles = ['index.html', 'privacy.html', 'terms.html'];
+    const htmlFiles = ['public/index.html', 'public/privacy.html', 'public/terms.html'];
     
     htmlFiles.forEach(file => {
         let content = fs.readFileSync(file, 'utf8');
@@ -77,7 +77,7 @@ function updateHtmlFiles() {
 
 // Update service worker
 function updateServiceWorker() {
-    let content = fs.readFileSync('sw.js', 'utf8');
+    let content = fs.readFileSync('public/sw.js', 'utf8');
     
     // Update cache names
     content = content.replace(/colorstack-v[\d.]+/g, `colorstack-v${VERSION}`);
@@ -93,7 +93,7 @@ function updateServiceWorker() {
         return match.replace(/[\d.]+'$/, `${VERSION}'`);
     });
     
-    fs.writeFileSync('sw.js', content);
+    fs.writeFileSync('public/sw.js', content);
     console.log(`✅ Updated sw.js`);
 }
 

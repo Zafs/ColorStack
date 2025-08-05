@@ -65,7 +65,7 @@
         // Test version loading
         async function testVersionLoading() {
             try {
-                const response = await fetch('js/version.js?v=2.1.2');
+                const response = await fetch('public/js/version.js?v=2.1.2');
                 if (response.ok) {
                     document.getElementById('version-info').innerHTML = 
                         '<p class="success">✅ Version.js loaded successfully</p>';
@@ -82,10 +82,10 @@
         // Test resource loading
         async function testResourceLoading() {
             const resources = [
-                'js/main.js?v=2.1.2',
-                'js/ui.js?v=2.1.2',
-                'js/image_processor.js?v=2.1.2',
-                'Logo.svg?v=2.1.2'
+                'public/js/main.js?v=2.1.2',
+                'public/js/ui.js?v=2.1.2',
+                'public/js/image_processor.js?v=2.1.2',
+                'public/Logo.svg?v=2.1.2'
             ];
             
             let results = [];
