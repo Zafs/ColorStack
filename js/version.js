@@ -2,30 +2,30 @@
 const VERSION_CONFIG = {
     // Main version - increment this for major updates
     version: '2.1.6',
-    
+
     // Individual asset versions - increment these for specific file updates
     assets: {
         'js/main.js': '2.1.6',
-        'js/ui.js': '2.1.6', 
+        'js/ui.js': '2.1.6',
         'js/image_processor.js': '2.1.6',
         'js/stl_exporter.js': '2.1.6',
         'js/main-fallback.js': '2.1.6',
         'Logo.svg': '2.1.6',
-        'manifest.json': '2.1.6'
+        'manifest.json': '2.1.6',
     },
-    
+
     // External resources that should be cached
     externals: {
         'https://cdn.tailwindcss.com?plugins=forms,container-queries': '2.1.6',
         'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap': '2.1.6',
-        'https://fonts.googleapis.com/icon?family=Material+Icons': '2.1.6'
-    }
+        'https://fonts.googleapis.com/icon?family=Material+Icons': '2.1.6',
+    },
 };
 
 // Cache busting utility functions
 const CacheBuster = {
     // Get versioned URL for a resource
-    getVersionedUrl: function(path) {
+    getVersionedUrl: function (path) {
         if (path.startsWith('http')) {
             // External resource
             const version = VERSION_CONFIG.externals[path];
@@ -41,26 +41,26 @@ const CacheBuster = {
             return `${path}${separator}v=${version}`;
         }
     },
-    
+
     // Get all versioned URLs for static files
-    getStaticFiles: function() {
+    getStaticFiles: function () {
         const files = [];
-        
+
         // Add local files
         Object.keys(VERSION_CONFIG.assets).forEach(path => {
             files.push(this.getVersionedUrl(path));
         });
-        
+
         // Add external files
         Object.keys(VERSION_CONFIG.externals).forEach(url => {
             files.push(this.getVersionedUrl(url));
         });
-        
+
         return files;
     },
-    
+
     // Update all script and link tags with versioned URLs
-    updateResourceUrls: function() {
+    updateResourceUrls: function () {
         // Update script tags
         const scripts = document.querySelectorAll('script[src]');
         scripts.forEach(script => {
@@ -69,7 +69,7 @@ const CacheBuster = {
                 script.setAttribute('src', this.getVersionedUrl(src));
             }
         });
-        
+
         // Update link tags (CSS, icons, etc.)
         const links = document.querySelectorAll('link[href]');
         links.forEach(link => {
@@ -78,7 +78,7 @@ const CacheBuster = {
                 link.setAttribute('href', this.getVersionedUrl(href));
             }
         });
-    }
+    },
 };
 
 // Auto-update URLs when this script loads
@@ -89,4 +89,4 @@ if (typeof document !== 'undefined') {
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { VERSION_CONFIG, CacheBuster };
-} 
+}

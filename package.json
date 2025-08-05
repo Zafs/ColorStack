@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "npx serve .",
     "build": "echo 'Static site - no build required'",
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "lint": "eslint js/**/*.js",
+    "format": "prettier --write js/**/*.js"
   },
   "keywords": [
     "3d-printing",
@@ -18,7 +20,9 @@
   "author": "ColorStack",
   "license": "MIT",
   "devDependencies": {
-    "serve": "^14.2.1"
+    "serve": "^14.2.1",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5"
   },
   "engines": {
     "node": ">=16.0.0"
