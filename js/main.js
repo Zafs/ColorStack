@@ -5,6 +5,7 @@
     var imageProcessor, stlExporter, ui;
     var domElements;
     var appState;
+    var imageWorker; // Web Worker for image processing
 
     // Enhanced error handling for file operations
     function handleFile(file) { 
@@ -30,8 +31,15 @@
         }
         
         try {
-            loadImage(file); 
+            // First, make the main content area visible.
             showMainContent(domElements);
+
+            // Then, wait for the next browser paint cycle before loading the image.
+            // This ensures the canvases are rendered and ready.
+            setTimeout(() => {
+                loadImage(file);
+            }, 0);
+
         } catch (error) {
             console.error('Error handling file:', error);
             showError('Failed to load image. Please try again.');
@@ -61,14 +69,27 @@
             
             appState.img = new Image();
             
-            appState.img.onload = function() { 
+            appState.img.onload = function() {
                 console.log('Image loaded successfully');
-                try {
-                    handleNumBandsChange(); 
-                } catch (error) {
-                    console.error('Error processing image:', error);
-                    showError('Failed to process image. Please try a different image.');
-                }
+                
+                // Synchronize with browser's paint cycle to ensure canvas is ready
+                requestAnimationFrame(function() {
+                    try {
+                        // Explicitly draw the original image to its canvas here.
+                        const img = appState.img;
+                        const origCanvas = domElements.origCanvas;
+                        origCanvas.width = img.width;
+                        origCanvas.height = img.height;
+                        const context = origCanvas.getContext('2d');
+                        context.drawImage(img, 0, 0, img.width, img.height);
+
+                        // Now, proceed with processing.
+                        handleNumBandsChange();
+                    } catch (error) {
+                        console.error('Error processing image:', error);
+                        showError('Failed to process image. Please try a different image.');
+                    }
+                });
             };
             
             appState.img.onerror = function() {
@@ -97,10 +118,47 @@
         if (!appState.img) return;
         
         try {
-            appState.bandMap = processImage(appState, domElements);
+            // Show spinner while processing
+            if (domElements.spinner) {
+                domElements.spinner.style.display = 'flex';
+            }
+            
+            // Prepare data for worker (serializable version)
+            const workerAppState = {
+                suggestedPalette: appState.suggestedPalette,
+                currentPalette: appState.currentPalette,
+                imageData: appState.imageData,
+                width: appState.img.width,
+                height: appState.img.height
+            };
+            
+            const workerDomElements = {
+                layerSlider: { value: domElements.layerSlider.value },
+                singleLayerToggle: { checked: domElements.singleLayerToggle ? domElements.singleLayerToggle.checked : false }
+            };
+            
+            // Send message to worker
+            if (imageWorker) {
+                imageWorker.postMessage({
+                    type: 'process_image',
+                    data: {
+                        appState: workerAppState,
+                        domElements: workerDomElements
+                    }
+                });
+            } else {
+                // Fallback to synchronous processing
+                appState.bandMap = processImage(appState, domElements);
+                if (domElements.spinner) {
+                    domElements.spinner.style.display = 'none';
+                }
+            }
         } catch (error) {
             console.error('Error processing image settings:', error);
             showError('Failed to update preview. Please try again.');
+            if (domElements.spinner) {
+                domElements.spinner.style.display = 'none';
+            }
         }
     }
 
@@ -152,47 +210,75 @@
                 return;
             }
             
-            var data = imageData.data;
-            appState.suggestedPalette = getSuggestedColors(data, numBands);
+            // Store image data for worker
+            appState.imageData = imageData.data;
             
-            // Intelligently set the base layer by detecting background color
-            var backgroundColor = detectBackgroundColor(data, img.width, img.height);
+            // Show spinner while processing
+            if (domElements.spinner) {
+                domElements.spinner.style.display = 'flex';
+            }
             
-            // Find the color in the suggested palette closest to the background color
-            var closestIndex = 0;
-            var minDistance = Infinity;
-            
-            for (var i = 0; i < appState.suggestedPalette.length; i++) {
-                var rgb = hexToRgb(appState.suggestedPalette[i]);
-                var paletteColor = [rgb.r, rgb.g, rgb.b];
-                var distance = colorDistance(backgroundColor, paletteColor);
+            // Send message to worker for palette generation
+            if (imageWorker) {
+                imageWorker.postMessage({
+                    type: 'generate_palette',
+                    data: {
+                        imageData: imageData.data,
+                        numBands: numBands,
+                        width: img.width,
+                        height: img.height
+                    }
+                });
+            } else {
+                // Fallback to synchronous processing
+                var data = imageData.data;
+                appState.suggestedPalette = getSuggestedColors(data, numBands);
                 
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestIndex = i;
+                // Intelligently set the base layer by detecting background color
+                var backgroundColor = detectBackgroundColor(data, img.width, img.height);
+                
+                // Find the color in the suggested palette closest to the background color
+                var closestIndex = 0;
+                var minDistance = Infinity;
+                
+                for (var i = 0; i < appState.suggestedPalette.length; i++) {
+                    var rgb = hexToRgb(appState.suggestedPalette[i]);
+                    var paletteColor = [rgb.r, rgb.g, rgb.b];
+                    var distance = colorDistance(backgroundColor, paletteColor);
+                    
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestIndex = i;
+                    }
+                }
+                
+                // Move the closest color to the beginning of the palette (base layer)
+                if (closestIndex > 0) {
+                    var baseColor = appState.suggestedPalette[closestIndex];
+                    appState.suggestedPalette.splice(closestIndex, 1);
+                    appState.suggestedPalette.unshift(baseColor);
+                }
+                
+                // Sort the remaining colors (from index 1 to end) by luminance, darkest to lightest
+                if (appState.suggestedPalette.length > 1) {
+                    var remainingColors = appState.suggestedPalette.slice(1);
+                    remainingColors.sort(function(a, b) {
+                        return getLuminance(a) - getLuminance(b);
+                    });
+                    appState.suggestedPalette = [appState.suggestedPalette[0]].concat(remainingColors);
+                }
+                
+                updatePalette();
+                if (domElements.spinner) {
+                    domElements.spinner.style.display = 'none';
                 }
             }
-            
-            // Move the closest color to the beginning of the palette (base layer)
-            if (closestIndex > 0) {
-                var baseColor = appState.suggestedPalette[closestIndex];
-                appState.suggestedPalette.splice(closestIndex, 1);
-                appState.suggestedPalette.unshift(baseColor);
-            }
-            
-            // Sort the remaining colors (from index 1 to end) by luminance, darkest to lightest
-            if (appState.suggestedPalette.length > 1) {
-                var remainingColors = appState.suggestedPalette.slice(1);
-                remainingColors.sort(function(a, b) {
-                    return getLuminance(a) - getLuminance(b);
-                });
-                appState.suggestedPalette = [appState.suggestedPalette[0]].concat(remainingColors);
-            }
-            
-            updatePalette();
         } catch (error) {
             console.error('Error in handleNumBandsChange:', error);
             showError('Failed to process image. Please try again.');
+            if (domElements.spinner) {
+                domElements.spinner.style.display = 'none';
+            }
         }
     }
 
@@ -505,6 +591,177 @@
     // Initialize modules and start the application
     async function initializeApp() {
         try {
+            // Initialize DOM elements first (needed for UI state management)
+            domElements = {
+                spinner: document.getElementById('spinner'),
+                uploadArea: document.getElementById('uploadArea'),
+                uploadCard: document.getElementById('uploadCard'),
+                mainContent: document.getElementById('mainContent'),
+                app: document.getElementById('app'),
+                fileInput: document.getElementById('fileInput'),
+                origCanvas: document.getElementById('origCanvas'),
+                procCanvas: document.getElementById('procCanvas'),
+                paletteDiv: document.getElementById('palette'),
+                numBandsInput: document.getElementById('numBands'),
+                numBandsValue: document.getElementById('numBandsValue'),
+                layerHeightInput: document.getElementById('layerHeight'),
+                bandThicknessInput: document.getElementById('bandThickness'),
+                baseThicknessInput: document.getElementById('baseThickness'),
+                xSizeInput: document.getElementById('xSize'),
+                ySizeInput: document.getElementById('ySize'),
+                layerSlider: document.getElementById('layerSlider'),
+                layerValue: document.getElementById('layerValue'),
+                maxLayers: document.getElementById('maxLayers'),
+                singleLayerToggle: document.getElementById('singleLayerToggle'),
+                exportBtn: document.getElementById('exportBtn'),
+                newImageBtn: document.getElementById('newImageBtn'),
+                instructionsBtn: document.getElementById('instructionsBtn'),
+                suggestedPaletteBtn: document.getElementById('suggestedPaletteBtn'),
+                myPaletteBtn: document.getElementById('myPaletteBtn'),
+                invertPaletteBtn: document.getElementById('invertPaletteBtn'),
+                addFilamentBtn: document.getElementById('addFilamentBtn'),
+                myFilamentsList: document.getElementById('myFilamentsList'),
+                modal: document.getElementById('modal'),
+                modalTitle: document.getElementById('modalTitle'),
+                modalBody: document.getElementById('modalBody'),
+                modalCloseBtn: document.getElementById('modalCloseBtn'),
+            };
+            
+            // Make domElements globally accessible for worker
+            window.domElements = domElements;
+
+            // Initialize app state
+            appState = {
+                img: null, 
+                bandMap: null, 
+                origCanvas: domElements.origCanvas,
+                myFilaments: [], 
+                suggestedPalette: [], 
+                currentPalette: [],
+                activePalette: 'suggested',
+            };
+            
+            // Make appState globally accessible for the color picker
+            window.appState = appState;
+
+            // Gate User Interaction until Ready
+            if (domElements.fileInput) {
+                domElements.fileInput.disabled = true;
+            }
+            if (domElements.uploadCard) {
+                domElements.uploadCard.style.cursor = 'wait';
+            }
+
+            // Create promises for initialization
+            let isWorkerReady = new Promise(resolve => {
+                if (window.Worker) {
+                    try {
+                        imageWorker = new Worker('js/image_worker.js');
+                        
+                        // Set up worker message handler - unified handler for all message types
+                        imageWorker.onmessage = function(e) {
+                            const { type, data } = e.data;
+
+                            // Show a spinner ONLY when starting a task, and hide it on any response.
+                            if (type !== 'worker_ready') {
+                                domElements.spinner.style.display = 'none';
+                            }
+
+                            switch (type) {
+                                case 'worker_ready':
+                                    console.log('Image worker is ready.');
+                                    resolve(true); // Resolves the isWorkerReady promise
+                                    break;
+
+                                case 'palette_generated':
+                                    appState.suggestedPalette = data.suggestedPalette;
+                                    updatePalette(); // This will trigger the call to process the image
+                                    break;
+
+                                case 'image_processed':
+                                    if (data.bandMap && data.previewImageData) {
+                                        appState.bandMap = new Float32Array(data.bandMap);
+                                        const previewImage = new ImageData(new Uint8ClampedArray(data.previewImageData.data), data.previewImageData.width, data.previewImageData.height);
+                                        domElements.procCanvas.getContext('2d').putImageData(previewImage, 0, 0);
+                                    } else {
+                                         showError("Image processing failed to return valid data.");
+                                    }
+                                    
+                                    // Force canvas redraw after a delay to ensure browser stability
+                                    setTimeout(() => {
+                                        console.log('Forcing canvas redraw...');
+
+                                        // 1. Redraw the original image
+                                        const origCanvas = document.getElementById('origCanvas');
+                                        if (origCanvas && appState.img) {
+                                            const context = origCanvas.getContext('2d');
+                                            // Ensure canvas dimensions are still correct before drawing
+                                            if (origCanvas.width !== appState.img.width || origCanvas.height !== appState.img.height) {
+                                                origCanvas.width = appState.img.width;
+                                                origCanvas.height = appState.img.height;
+                                            }
+                                            context.drawImage(appState.img, 0, 0, origCanvas.width, origCanvas.height);
+                                        }
+
+                                        // 2. Redraw the processed preview
+                                        const procCanvas = document.getElementById('procCanvas');
+                                        if (procCanvas && data.previewImageData) {
+                                            const previewImage = new ImageData(new Uint8ClampedArray(data.previewImageData.data.buffer.slice(0)), data.previewImageData.width, data.previewImageData.height);
+                                            procCanvas.getContext('2d').putImageData(previewImage, 0, 0);
+                                        }
+                                    }, 100); // 100ms delay to ensure the browser is stable
+                                    break;
+
+                                case 'error':
+                                    showError(data.message || "An unknown error occurred in the worker.");
+                                    break;
+
+                                default:
+                                    console.warn('Unknown message type from worker:', type);
+                                    break;
+                            }
+                        };
+                        
+                        // Set up worker error handler
+                        imageWorker.onerror = function(error) {
+                            console.error('Worker error:', error);
+                            showError('Image processing failed. Please try again.');
+                            if (window.domElements && window.domElements.spinner) {
+                                window.domElements.spinner.style.display = 'none';
+                            }
+                        };
+                        
+                        // Send init message to worker
+                        imageWorker.postMessage({ type: 'init' });
+                        
+                        console.log('Web Worker initialized successfully');
+                    } catch (workerError) {
+                        console.warn('Failed to initialize Web Worker, falling back to synchronous processing:', workerError);
+                        imageWorker = null;
+                        resolve(true); // Resolve anyway to not block the app
+                    }
+                } else {
+                    console.warn('Web Workers not supported, using synchronous processing');
+                    imageWorker = null;
+                    resolve(true); // Resolve anyway to not block the app
+                }
+            });
+
+            // Ensure the Service Worker is Active
+            let isServiceWorkerReady = new Promise(resolve => {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then(registration => {
+                        console.log('Service worker is active.');
+                        resolve(true);
+                    }).catch(error => {
+                        console.error('Service worker failed to become ready:', error);
+                        resolve(true); // Resolve anyway to not block the app
+                    });
+                } else {
+                    resolve(true); // No service worker, so we're "ready"
+                }
+            });
+            
             // Import modules
             imageProcessor = await import('./image_processor.js');
             stlExporter = await import('./stl_exporter.js');
@@ -554,56 +811,6 @@
             window.hideHeaderButtons = hideHeaderButtons;
             window.openCustomColorPicker = openCustomColorPicker;
 
-            // Initialize DOM elements after DOM is loaded
-            domElements = {
-                spinner: document.getElementById('spinner'),
-                uploadArea: document.getElementById('uploadArea'),
-                uploadCard: document.getElementById('uploadCard'),
-                mainContent: document.getElementById('mainContent'),
-                app: document.getElementById('app'),
-                fileInput: document.getElementById('fileInput'),
-                origCanvas: document.getElementById('origCanvas'),
-                procCanvas: document.getElementById('procCanvas'),
-                paletteDiv: document.getElementById('palette'),
-                numBandsInput: document.getElementById('numBands'),
-                numBandsValue: document.getElementById('numBandsValue'),
-                layerHeightInput: document.getElementById('layerHeight'),
-                bandThicknessInput: document.getElementById('bandThickness'),
-                baseThicknessInput: document.getElementById('baseThickness'),
-                xSizeInput: document.getElementById('xSize'),
-                ySizeInput: document.getElementById('ySize'),
-                layerSlider: document.getElementById('layerSlider'),
-                layerValue: document.getElementById('layerValue'),
-                maxLayers: document.getElementById('maxLayers'),
-                singleLayerToggle: document.getElementById('singleLayerToggle'),
-                exportBtn: document.getElementById('exportBtn'),
-                newImageBtn: document.getElementById('newImageBtn'),
-                instructionsBtn: document.getElementById('instructionsBtn'),
-                suggestedPaletteBtn: document.getElementById('suggestedPaletteBtn'),
-                myPaletteBtn: document.getElementById('myPaletteBtn'),
-                invertPaletteBtn: document.getElementById('invertPaletteBtn'),
-                addFilamentBtn: document.getElementById('addFilamentBtn'),
-                myFilamentsList: document.getElementById('myFilamentsList'),
-                modal: document.getElementById('modal'),
-                modalTitle: document.getElementById('modalTitle'),
-                modalBody: document.getElementById('modalBody'),
-                modalCloseBtn: document.getElementById('modalCloseBtn'),
-            };
-
-            // Initialize app state
-            appState = {
-                img: null, 
-                bandMap: null, 
-                origCanvas: domElements.origCanvas,
-                myFilaments: [], 
-                suggestedPalette: [], 
-                currentPalette: [],
-                activePalette: 'suggested',
-            };
-            
-            // Make appState globally accessible for the color picker
-            window.appState = appState;
-
             // Debug DOM elements
             console.log('DOM Elements found:', {
                 uploadCard: !!domElements.uploadCard,
@@ -617,10 +824,23 @@
             // Hide header buttons initially since no image is loaded
             hideHeaderButtons(domElements);
             
-            // Set up all event listeners with error handling
-            setupEventListeners();
-            
-            console.log('Application initialized successfully');
+            // Wait for both worker and service worker to be ready
+            Promise.all([isWorkerReady, isServiceWorkerReady]).then(() => {
+                console.log('Application is fully ready.');
+                
+                // Enable UI now that everything is ready
+                if (domElements.fileInput) {
+                    domElements.fileInput.disabled = false;
+                }
+                if (domElements.uploadCard) {
+                    domElements.uploadCard.style.cursor = 'pointer';
+                }
+                
+                // It's now safe to set up event listeners
+                setupEventListeners();
+                
+                console.log('Application initialized successfully');
+            });
             
         } catch (error) {
             console.error('Failed to initialize application:', error);
