@@ -114,22 +114,21 @@ self.addEventListener('fetch', event => {
 
   // Handle different types of requests
   if (url.pathname === '/' || url.pathname === '/index.html') {
-    // Main page - serve from cache, fallback to network
+    // Main page - network first, falling back to cache
     event.respondWith(
-      caches.match(request)
+      fetch(request)
         .then(response => {
-          if (response) {
-            return response;
+          // If the network request is successful, cache it and return it
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(STATIC_CACHE)
+              .then(cache => cache.put(request, responseClone));
           }
-          return fetch(request)
-            .then(response => {
-              if (response && response.status === 200) {
-                const responseClone = response.clone();
-                caches.open(STATIC_CACHE)
-                  .then(cache => cache.put(request, responseClone));
-              }
-              return response;
-            });
+          return response;
+        })
+        .catch(() => {
+          // If the network request fails, serve from the cache
+          return caches.match(request);
         })
     );
   } else if (url.pathname.startsWith('/js/') || url.pathname.startsWith('/css/') || 
