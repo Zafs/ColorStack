@@ -158,14 +158,17 @@ function kMeans(data, k) {
  * Uses a greedy algorithm to avoid duplicate filament usage while prioritizing best matches.
  *
  * @param {Array<string>} suggestedPalette - Array of hex color strings from k-means
- * @param {Array<string>} myFilaments - Array of available filament hex colors
+ * @param {Array<Object>} myFilaments - Array of filament objects with color property
  * @returns {Array<string>} Matched palette using available filament colors
  */
 export function matchToPalette(suggestedPalette, myFilaments) {
     if (!myFilaments || myFilaments.length === 0) return suggestedPalette;
 
+    // Extract colors from filament objects for backward compatibility
+    const filamentColors = myFilaments.map(filament => filament.color);
+
     // Convert filament colors to RGB arrays for distance calculation
-    const filamentRgb = myFilaments.map(color => {
+    const filamentRgb = filamentColors.map(color => {
         const { r, g, b } = hexToRgb(color);
         return [r, g, b];
     });
@@ -182,7 +185,7 @@ export function matchToPalette(suggestedPalette, myFilaments) {
                 suggestedIndex,
                 filamentIndex,
                 suggestedColor,
-                filamentColor: myFilaments[filamentIndex],
+                filamentColor: filamentColors[filamentIndex],
                 distance,
             });
         });
@@ -212,16 +215,16 @@ export function matchToPalette(suggestedPalette, myFilaments) {
     for (let i = 0; i < matchedPalette.length; i++) {
         if (!matchedPalette[i]) {
             // Find the best unused filament
-            for (let j = 0; j < myFilaments.length; j++) {
+            for (let j = 0; j < filamentColors.length; j++) {
                 if (!usedFilaments.has(j)) {
-                    matchedPalette[i] = myFilaments[j];
+                    matchedPalette[i] = filamentColors[j];
                     usedFilaments.add(j);
                     break;
                 }
             }
             // If all filaments are used, use the first one
             if (!matchedPalette[i]) {
-                matchedPalette[i] = myFilaments[0];
+                matchedPalette[i] = filamentColors[0];
             }
         }
     }

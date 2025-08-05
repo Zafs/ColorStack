@@ -291,20 +291,58 @@ export function openCustomColorPicker(currentColor, onColorChange, isFilamentPic
     }
 }
 
-export function renderMyFilaments(filaments, container, onRemove) {
+export function renderMyFilaments(filaments, container, onRemove, onEdit = null) {
     container.innerHTML = '';
-    filaments.forEach((color, index) => {
-        const filamentDiv = document.createElement('div');
-        filamentDiv.className = 'relative group flex flex-col items-center gap-2 has-tooltip';
+    filaments.forEach((filament, index) => {
+        // Create main filament card container
+        const filamentCard = document.createElement('div');
+        filamentCard.className = 'relative group bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg';
+
+        // Action buttons container - positioned in top-right corner
+        const actionButtons = document.createElement('div');
+        actionButtons.className = 'absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10';
+
+        // Edit button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'p-1 bg-blue-600 hover:bg-blue-700 rounded-full text-white transition-colors duration-200 shadow-lg';
+        editBtn.title = 'Edit filament';
+        const editIcon = document.createElement('span');
+        editIcon.className = 'material-icons text-xs';
+        editIcon.textContent = 'edit';
+        editBtn.appendChild(editIcon);
+        editBtn.onclick = e => {
+            e.stopPropagation();
+            if (onEdit) {
+                onEdit(filament.id);
+            } else {
+                console.log('Edit filament:', filament.id);
+            }
+        };
+
+        // Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'p-1 bg-red-600 hover:bg-red-700 rounded-full text-white transition-colors duration-200 shadow-lg';
+        deleteBtn.title = 'Delete filament';
+        const deleteIcon = document.createElement('span');
+        deleteIcon.className = 'material-icons text-xs';
+        deleteIcon.textContent = 'delete';
+        deleteBtn.appendChild(deleteIcon);
+        deleteBtn.onclick = e => {
+            e.stopPropagation();
+            onRemove(filament.id);
+        };
 
         // Create filament spool as a ring with transparent center
+        const spoolContainer = document.createElement('div');
+        spoolContainer.className = 'flex justify-center mb-3';
+
         const spoolDiv = document.createElement('div');
         spoolDiv.className = 'w-16 h-16 rounded-full flex items-center justify-center relative';
 
         // Create the main ring with a hole using CSS
         const ringDiv = document.createElement('div');
         ringDiv.className = 'absolute w-16 h-16 rounded-full';
-        ringDiv.style.backgroundColor = color;
+        ringDiv.style.backgroundColor = filament.color;
         ringDiv.style.border = '4px solid #6B7280';
         ringDiv.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.3)';
         ringDiv.style.mask = 'radial-gradient(circle at center, transparent 10px, black 10px)';
@@ -317,32 +355,36 @@ export function renderMyFilaments(filaments, container, onRemove) {
         holeOutline.style.border = '4px solid #6B7280';
         holeOutline.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.3)';
 
-        // Remove button
-        const removeBtn = document.createElement('button');
-        removeBtn.className =
-            'absolute top-0 right-0 p-1 bg-gray-800 rounded-full text-gray-400 hover:text-white hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity';
-        const closeIcon = document.createElement('span');
-        closeIcon.className = 'material-icons text-sm';
-        closeIcon.textContent = 'close';
-        removeBtn.appendChild(closeIcon);
-        removeBtn.onclick = e => {
-            e.stopPropagation();
-            onRemove(index);
-        };
+        // Filament name
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'text-center mb-1 min-h-[2.5rem] flex items-center justify-center';
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'text-sm font-medium text-gray-200 break-words leading-tight';
+        nameSpan.textContent = filament.name;
+        nameDiv.appendChild(nameSpan);
 
-        // Tooltip
-        const tooltip = document.createElement('div');
-        tooltip.className = 'tooltip -bottom-5 px-2 py-1 bg-gray-900 text-white text-xs rounded';
-        tooltip.textContent = 'Remove filament';
+        // Filament type
+        const typeDiv = document.createElement('div');
+        typeDiv.className = 'text-center mb-3';
+        const typeSpan = document.createElement('span');
+        typeSpan.className = 'text-xs text-gray-400';
+        typeSpan.textContent = filament.type;
+        typeDiv.appendChild(typeSpan);
 
-        // Assemble the filament
+        // Assemble the filament card
         spoolDiv.appendChild(ringDiv);
         spoolDiv.appendChild(holeOutline);
-        filamentDiv.appendChild(spoolDiv);
-        filamentDiv.appendChild(removeBtn);
-        filamentDiv.appendChild(tooltip);
+        spoolContainer.appendChild(spoolDiv);
+        
+        actionButtons.appendChild(editBtn);
+        actionButtons.appendChild(deleteBtn);
 
-        container.appendChild(filamentDiv);
+        filamentCard.appendChild(actionButtons);
+        filamentCard.appendChild(spoolContainer);
+        filamentCard.appendChild(nameDiv);
+        filamentCard.appendChild(typeDiv);
+
+        container.appendChild(filamentCard);
     });
 }
 

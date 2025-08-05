@@ -11,6 +11,21 @@
     // ============================================================================
 
     /**
+     * Loads an external script dynamically and returns a Promise.
+     * @param {string} url - The URL of the script to load
+     * @returns {Promise} Promise that resolves when script loads, rejects on error
+     */
+    function loadExternalScript(url) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = url;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error(`Failed to load script: ${url}`));
+            document.head.appendChild(script);
+        });
+    }
+
+    /**
      * Debounce utility function to prevent excessive function calls.
      * @param {Function} func - The function to debounce
      * @param {number} delay - The delay in milliseconds
@@ -195,8 +210,11 @@
     function matchToPalette(suggestedPalette, myFilaments) {
         if (!myFilaments || myFilaments.length === 0) return suggestedPalette;
 
+        // Extract colors from filament objects for backward compatibility
+        const filamentColors = myFilaments.map(filament => filament.color);
+
         // Convert filament colors to RGB arrays for distance calculation
-        const filamentRgb = myFilaments.map(color => {
+        const filamentRgb = filamentColors.map(color => {
             const { r, g, b } = hexToRgb(color);
             return [r, g, b];
         });
@@ -213,7 +231,7 @@
                     suggestedIndex,
                     filamentIndex,
                     suggestedColor,
-                    filamentColor: myFilaments[filamentIndex],
+                    filamentColor: filamentColors[filamentIndex],
                     distance,
                 });
             });
@@ -246,16 +264,16 @@
         for (let i = 0; i < matchedPalette.length; i++) {
             if (!matchedPalette[i]) {
                 // Find the best unused filament
-                for (let j = 0; j < myFilaments.length; j++) {
+                for (let j = 0; j < filamentColors.length; j++) {
                     if (!usedFilaments.has(j)) {
-                        matchedPalette[i] = myFilaments[j];
+                        matchedPalette[i] = filamentColors[j];
                         usedFilaments.add(j);
                         break;
                     }
                 }
                 // If all filaments are used, use the first one
                 if (!matchedPalette[i]) {
-                    matchedPalette[i] = myFilaments[0];
+                    matchedPalette[i] = filamentColors[0];
                 }
             }
         }
@@ -1075,7 +1093,11 @@
                 e.stopPropagation();
                 console.log('Confirm button clicked');
                 onColorChange(selectedColor);
-                modal.style.display = 'none';
+                // Only close the modal if it's not a filament picker
+                // For filament picker, let the callback handle any UI updates
+                if (!isFilamentPicker) {
+                    modal.style.display = 'none';
+                }
             });
         }
 
@@ -1107,20 +1129,56 @@
         }
     }
 
-    function renderMyFilaments(filaments, container, onRemove) {
+    function renderMyFilaments(filaments, container, onRemove, editCallback) {
         container.innerHTML = '';
-        filaments.forEach((color, index) => {
-            const filamentDiv = document.createElement('div');
-            filamentDiv.className = 'relative group flex flex-col items-center gap-2 has-tooltip';
+        filaments.forEach((filament, index) => {
+            // Create main filament card container
+            const filamentCard = document.createElement('div');
+            filamentCard.className = 'relative group bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg';
+
+            // Action buttons container - positioned in top-right corner
+            const actionButtons = document.createElement('div');
+            actionButtons.className = 'absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10';
+
+            // Edit button
+            const editBtn = document.createElement('button');
+            editBtn.className = 'p-1 bg-blue-600 hover:bg-blue-700 rounded-full text-white transition-colors duration-200 shadow-lg';
+            editBtn.title = 'Edit filament';
+            const editIcon = document.createElement('span');
+            editIcon.className = 'material-icons text-xs';
+            editIcon.textContent = 'edit';
+            editBtn.appendChild(editIcon);
+            editBtn.onclick = e => {
+                e.stopPropagation();
+                if (editCallback) {
+                    editCallback(filament.id);
+                }
+            };
+
+            // Delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'p-1 bg-red-600 hover:bg-red-700 rounded-full text-white transition-colors duration-200 shadow-lg';
+            deleteBtn.title = 'Delete filament';
+            const deleteIcon = document.createElement('span');
+            deleteIcon.className = 'material-icons text-xs';
+            deleteIcon.textContent = 'delete';
+            deleteBtn.appendChild(deleteIcon);
+            deleteBtn.onclick = e => {
+                e.stopPropagation();
+                onRemove(filament.id);
+            };
 
             // Create filament spool as a ring with transparent center
+            const spoolContainer = document.createElement('div');
+            spoolContainer.className = 'flex justify-center mb-3';
+
             const spoolDiv = document.createElement('div');
             spoolDiv.className = 'w-16 h-16 rounded-full flex items-center justify-center relative';
 
             // Create the main ring with a hole using CSS
             const ringDiv = document.createElement('div');
             ringDiv.className = 'absolute w-16 h-16 rounded-full';
-            ringDiv.style.backgroundColor = color;
+            ringDiv.style.backgroundColor = filament.color;
             ringDiv.style.border = '4px solid #6B7280';
             ringDiv.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.3)';
             ringDiv.style.mask = 'radial-gradient(circle at center, transparent 10px, black 10px)';
@@ -1133,33 +1191,36 @@
             holeOutline.style.border = '4px solid #6B7280';
             holeOutline.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.3)';
 
-            // Remove button
-            const removeBtn = document.createElement('button');
-            removeBtn.className =
-                'absolute top-0 right-0 p-1 bg-gray-800 rounded-full text-gray-400 hover:text-white hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity';
-            const closeIcon = document.createElement('span');
-            closeIcon.className = 'material-icons text-sm';
-            closeIcon.textContent = 'close';
-            removeBtn.appendChild(closeIcon);
-            removeBtn.onclick = e => {
-                e.stopPropagation();
-                onRemove(index);
-            };
+            // Filament name
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'text-center mb-1 min-h-[2.5rem] flex items-center justify-center';
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'text-sm font-medium text-gray-200 break-words leading-tight';
+            nameSpan.textContent = filament.name;
+            nameDiv.appendChild(nameSpan);
 
-            // Tooltip
-            const tooltip = document.createElement('div');
-            tooltip.className =
-                'tooltip -bottom-5 px-2 py-1 bg-gray-900 text-white text-xs rounded';
-            tooltip.textContent = 'Remove filament';
+            // Filament type
+            const typeDiv = document.createElement('div');
+            typeDiv.className = 'text-center mb-3';
+            const typeSpan = document.createElement('span');
+            typeSpan.className = 'text-xs text-gray-400';
+            typeSpan.textContent = filament.type;
+            typeDiv.appendChild(typeSpan);
 
-            // Assemble the filament
+            // Assemble the filament card
             spoolDiv.appendChild(ringDiv);
             spoolDiv.appendChild(holeOutline);
-            filamentDiv.appendChild(spoolDiv);
-            filamentDiv.appendChild(removeBtn);
-            filamentDiv.appendChild(tooltip);
+            spoolContainer.appendChild(spoolDiv);
+            
+            actionButtons.appendChild(editBtn);
+            actionButtons.appendChild(deleteBtn);
 
-            container.appendChild(filamentDiv);
+            filamentCard.appendChild(actionButtons);
+            filamentCard.appendChild(spoolContainer);
+            filamentCard.appendChild(nameDiv);
+            filamentCard.appendChild(typeDiv);
+
+            container.appendChild(filamentCard);
         });
     }
 
@@ -1582,11 +1643,30 @@
         try {
             const saved = localStorage.getItem('myFilaments');
             if (saved) {
-                appState.myFilaments = JSON.parse(saved);
+                const parsedData = JSON.parse(saved);
+                
+                // Migration logic: Check if the data is the old format (array of strings)
+                if (Array.isArray(parsedData) && parsedData.length > 0 && typeof parsedData[0] === 'string') {
+                    // Convert old format (array of color strings) to new format (array of objects)
+                    console.log('Migrating filaments from old format to new format');
+                    appState.myFilaments = parsedData.map(color => ({
+                        id: Date.now().toString() + Math.random().toString(36).substr(2, 9), // Generate unique ID
+                        name: 'New Filament',
+                        type: 'PLA',
+                        color: color
+                    }));
+                    // Save the migrated data
+                    saveMyFilaments();
+                } else {
+                    // New format already - use as is
+                    appState.myFilaments = parsedData;
+                }
+                
                 renderMyFilaments(
                     appState.myFilaments,
                     domElements.myFilamentsList,
-                    removeFilament
+                    removeFilament,
+                    openFilamentModal
                 );
             }
         } catch (error) {
@@ -1598,41 +1678,37 @@
 
     // Enhanced add filament function
     function addFilament() {
-        if (appState.myFilaments.length >= 16) {
-            showModal(
-                domElements,
-                'Maximum Filaments',
-                'You can only have up to 16 filaments. Please remove some before adding new ones.'
-            );
-            return;
-        }
-
-        // Use the same comprehensive color picker as the palette
-        openCustomColorPicker(
-            '#ff0000',
-            function (selectedColor) {
-                addFilamentWithColor(selectedColor);
-            },
-            true
-        ); // isFilamentPicker = true
+        openFilamentModal(); // Open modal in add mode
     }
 
     // Enhanced add filament with color function
     function addFilamentWithColor(color) {
         try {
-            if (!appState.myFilaments.includes(color)) {
-                appState.myFilaments.push(color);
-                saveMyFilaments();
-                renderMyFilaments(
-                    appState.myFilaments,
-                    domElements.myFilamentsList,
-                    removeFilament
-                );
-                if (appState.activePalette === 'my') updatePalette();
-                hideModal(domElements);
-            } else {
+            // Check if this color already exists in filaments
+            const existingFilament = appState.myFilaments.find(filament => filament.color === color);
+            if (existingFilament) {
                 showError('This color is already in your filaments!');
+                return;
             }
+
+            // Create a new filament object with the required structure
+            const newFilament = {
+                id: Date.now().toString(), // Generate unique ID
+                name: 'New Filament', // Placeholder name
+                type: 'PLA', // Placeholder type
+                color: color
+            };
+
+            appState.myFilaments.push(newFilament);
+            saveMyFilaments();
+            renderMyFilaments(
+                appState.myFilaments,
+                domElements.myFilamentsList,
+                removeFilament,
+                openFilamentModal
+            );
+            if (appState.activePalette === 'my') updatePalette();
+            hideModal(domElements);
         } catch (error) {
             console.error('Error adding filament:', error);
             showError('Failed to add filament. Please try again.');
@@ -1645,12 +1721,15 @@
     }
 
     // Enhanced remove filament function
-    function removeFilament(indexToRemove) {
+    function removeFilament(filamentId) {
         try {
-            appState.myFilaments.splice(indexToRemove, 1);
-            saveMyFilaments();
-            renderMyFilaments(appState.myFilaments, domElements.myFilamentsList, removeFilament);
-            if (appState.activePalette === 'my') updatePalette();
+            const indexToRemove = appState.myFilaments.findIndex(filament => filament.id === filamentId);
+            if (indexToRemove !== -1) {
+                appState.myFilaments.splice(indexToRemove, 1);
+                saveMyFilaments();
+                renderMyFilaments(appState.myFilaments, domElements.myFilamentsList, removeFilament, openFilamentModal);
+                if (appState.activePalette === 'my') updatePalette();
+            }
         } catch (error) {
             console.error('Error removing filament:', error);
             showError('Failed to remove filament. Please try again.');
@@ -1910,6 +1989,13 @@
             }
 
             // Create promises for initialization
+            const isNtcReady = loadExternalScript('https://cdn.jsdelivr.net/npm/ntc@0.0.1/ntc.min.js')
+                .catch(error => {
+                    console.warn('Failed to load ntc.js library:', error);
+                    // Don't reject the promise, just log the warning
+                    // The app will still work with fallback naming
+                });
+
             const isWorkerReady = new Promise(resolve => {
                 if (window.Worker) {
                     try {
@@ -2094,8 +2180,8 @@
             // Hide header buttons initially since no image is loaded
             hideHeaderButtons(domElements);
 
-            // Wait for both worker and service worker to be ready
-            Promise.all([isWorkerReady, isServiceWorkerReady]).then(() => {
+            // Wait for worker, service worker, and ntc library to be ready
+            Promise.all([isWorkerReady, isServiceWorkerReady, isNtcReady]).then(() => {
                 console.log('Application is fully ready.');
 
                 // Enable UI now that everything is ready
@@ -2123,4 +2209,247 @@
         console.log('Window loaded, initializing application');
         initializeApp();
     };
+
+    function openFilamentModal(filamentId = null) {
+        // Determine if we're in add or edit mode
+        const isEditMode = filamentId !== null;
+        const filament = isEditMode ? appState.myFilaments.find(f => f.id === filamentId) : null;
+        
+        // Prepare form data
+        const name = isEditMode ? filament.name : '';
+        const type = isEditMode ? filament.type : 'PLA';
+        const color = isEditMode ? filament.color : '#ff0000';
+        
+        // Create modal content
+        const modalContent = `
+            <div class="space-y-4">
+                <div>
+                    <label for="filamentName" class="block text-sm font-medium text-gray-300 mb-2">
+                        Filament Name
+                    </label>
+                    <input 
+                        type="text" 
+                        id="filamentName" 
+                        value="${name}"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter filament name"
+                    >
+                </div>
+                
+                <div>
+                    <label for="filamentType" class="block text-sm font-medium text-gray-300 mb-2">
+                        Filament Type
+                    </label>
+                    <select 
+                        id="filamentType" 
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="PLA" ${type === 'PLA' ? 'selected' : ''}>PLA</option>
+                        <option value="PETG" ${type === 'PETG' ? 'selected' : ''}>PETG</option>
+                        <option value="ABS" ${type === 'ABS' ? 'selected' : ''}>ABS</option>
+                        <option value="ASA" ${type === 'ASA' ? 'selected' : ''}>ASA</option>
+                        <option value="TPU" ${type === 'TPU' ? 'selected' : ''}>TPU</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        Filament Color
+                    </label>
+                    <div class="flex items-center space-x-3">
+                        <div 
+                            id="colorPreview" 
+                            class="w-10 h-10 rounded-full border-2 border-gray-600 cursor-pointer"
+                            style="background-color: ${color};"
+                        ></div>
+                        <input 
+                            type="text" 
+                            id="colorInput" 
+                            value="${color}"
+                            class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="#ff0000"
+                        >
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button 
+                        id="cancelBtn"
+                        class="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors duration-200"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        id="saveBtn"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200"
+                    >
+                        ${isEditMode ? 'Update' : 'Add'} Filament
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Show the modal
+        showModal(domElements, isEditMode ? 'Edit Filament' : 'Add New Filament', modalContent);
+        
+        // Function to set up event listeners for the filament modal
+        function setupFilamentModalEventListeners() {
+            const nameInput = document.getElementById('filamentName');
+            const typeSelect = document.getElementById('filamentType');
+            const colorInput = document.getElementById('colorInput');
+            const colorPreview = document.getElementById('colorPreview');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            // Color picker functionality with state restoration
+            if (colorPreview) {
+                colorPreview.onclick = () => {
+                    // Save the current modal state before opening color picker
+                    const savedModalHTML = domElements.modalBody.innerHTML;
+                    
+                    openCustomColorPicker(
+                        colorInput.value,
+                        (selectedColor) => {
+                            // Restore the modal HTML
+                            domElements.modalBody.innerHTML = savedModalHTML;
+                            
+                            // Re-query DOM elements after restoration
+                            const restoredColorInput = document.getElementById('colorInput');
+                            const restoredColorPreview = document.getElementById('colorPreview');
+                            
+                            // Update the color input and preview with the new color
+                            if (restoredColorInput) {
+                                restoredColorInput.value = selectedColor;
+                            }
+                            if (restoredColorPreview) {
+                                restoredColorPreview.style.backgroundColor = selectedColor;
+                            }
+                            
+                            // Re-attach all event listeners
+                            setupFilamentModalEventListeners();
+                        },
+                        true
+                    );
+                };
+            }
+            
+            // Color input change handler
+            if (colorInput) {
+                colorInput.oninput = () => {
+                    const newColor = colorInput.value;
+                    if (isValidHexColor(newColor)) {
+                        colorPreview.style.backgroundColor = newColor;
+                    }
+                };
+            }
+            
+            // Save button handler
+            if (saveBtn) {
+                saveBtn.onclick = () => {
+                    let newName = nameInput.value.trim();
+                    const newType = typeSelect.value;
+                    const newColor = colorInput.value.trim();
+                    
+                    // Smart naming: If name is empty, generate one from the color
+                    if (!newName && !isEditMode) {
+                        // First, check if the ntc library has loaded and is available on the window
+                        if (window.ntc) {
+                            try {
+                                // The ntc.name function returns an array: [matchedHex, name, exactMatchBoolean]
+                                const match = window.ntc.name(newColor);
+                                newName = match[1]; // The second item is the human-readable name
+                                
+                                // Check if the name contains a slash and take the first part if it does.
+                                if (newName.includes(' / ')) {
+                                    newName = newName.split(' / ')[0];
+                                }
+                            } catch (e) {
+                                console.warn('The ntc.js library failed to find a name. Using fallback.', e);
+                                newName = `New Filament ${newColor}`;
+                            }
+                        } else {
+                            // This is the fallback if the ntc library hasn't loaded for any reason
+                            console.warn('ntc.js library not found. Using fallback name.');
+                            newName = `New Filament ${newColor}`;
+                        }
+                    }
+                    
+                    // Validation
+                    if (!newName) {
+                        showError('Please enter a filament name.');
+                        return;
+                    }
+                    
+                    if (!isValidHexColor(newColor)) {
+                        showError('Please enter a valid hex color (e.g., #ff0000).');
+                        return;
+                    }
+                    
+                    // Check for duplicate colors (except in edit mode for the same filament)
+                    const existingFilament = appState.myFilaments.find(f => 
+                        f.color === newColor && (!isEditMode || f.id !== filamentId)
+                    );
+                    if (existingFilament) {
+                        showError('This color is already in your filaments!');
+                        return;
+                    }
+                    
+                    try {
+                        if (isEditMode) {
+                            // Update existing filament
+                            const filamentToUpdate = appState.myFilaments.find(f => f.id === filamentId);
+                            if (filamentToUpdate) {
+                                filamentToUpdate.name = newName;
+                                filamentToUpdate.type = newType;
+                                filamentToUpdate.color = newColor;
+                            }
+                        } else {
+                            // Check filament limit
+                            if (appState.myFilaments.length >= 16) {
+                                showError('You can only have up to 16 filaments. Please remove some before adding new ones.');
+                                return;
+                            }
+                            
+                            // Create new filament
+                            const newFilament = {
+                                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                                name: newName,
+                                type: newType,
+                                color: newColor
+                            };
+                            appState.myFilaments.push(newFilament);
+                        }
+                        
+                        // Save and update UI
+                        saveMyFilaments();
+                        renderMyFilaments(appState.myFilaments, domElements.myFilamentsList, removeFilament, openFilamentModal);
+                        if (appState.activePalette === 'my') updatePalette();
+                        hideModal(domElements);
+                        
+                    } catch (error) {
+                        console.error('Error saving filament:', error);
+                        showError('Failed to save filament. Please try again.');
+                    }
+                };
+            }
+            
+            // Cancel button handler
+            if (cancelBtn) {
+                cancelBtn.onclick = () => {
+                    hideModal(domElements);
+                };
+            }
+        }
+        
+        // Set up event listeners after modal is shown
+        setTimeout(() => {
+            setupFilamentModalEventListeners();
+            
+            // Focus on name input
+            const nameInput = document.getElementById('filamentName');
+            if (nameInput) {
+                nameInput.focus();
+            }
+        }, 100);
+    }
 })();
