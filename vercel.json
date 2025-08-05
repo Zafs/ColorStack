@@ -2,7 +2,5 @@
     "rewrites": [
       { "source": "/privacy", "destination": "/privacy.html" },
       { "source": "/terms", "destination": "/terms.html" }
-    ],
-    "public": true,
-    "root": "public"
+    ]
   }
