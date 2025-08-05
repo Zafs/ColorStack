@@ -64,6 +64,12 @@ function updateHtmlFiles() {
             `$1?v=${VERSION}`
         );
         
+        // Update Service Worker registration
+        content = content.replace(
+            /navigator\.serviceWorker\.register\('\/sw\.js(\?v=[\d.]+)?'\)/g,
+            `navigator.serviceWorker.register('/sw.js?v=${VERSION}')`
+        );
+        
         fs.writeFileSync(file, content);
         console.log(`✅ Updated ${file}`);
     });

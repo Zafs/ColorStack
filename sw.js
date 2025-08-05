@@ -1,24 +1,24 @@
 // Service Worker for ColorStack
-const CACHE_NAME = 'colorstack-v2.1.2';
-const STATIC_CACHE = 'colorstack-static-v2.1.2';
-const DYNAMIC_CACHE = 'colorstack-dynamic-v2.1.2';
+const CACHE_NAME = 'colorstack-v2.1.6';
+const STATIC_CACHE = 'colorstack-static-v2.1.6';
+const DYNAMIC_CACHE = 'colorstack-dynamic-v2.1.6';
 
 // Version configuration for cache busting
 const VERSION_CONFIG = {
-    version: '2.1.2',
+    version: '2.1.6',
     assets: {
-        'js/main.js': '2.1.2',
-        'js/ui.js': '2.1.2', 
-        'js/image_processor.js': '2.1.2',
-        'js/stl_exporter.js': '2.1.2',
-        'js/main-fallback.js': '2.1.2',
-        'Logo.svg': '2.1.2',
-        'manifest.json': '2.1.2'
+        'js/main.js': '2.1.6',
+        'js/ui.js': '2.1.6', 
+        'js/image_processor.js': '2.1.6',
+        'js/stl_exporter.js': '2.1.6',
+        'js/main-fallback.js': '2.1.6',
+        'Logo.svg': '2.1.6',
+        'manifest.json': '2.1.6'
     },
     externals: {
-        'https://cdn.tailwindcss.com?plugins=forms,container-queries': '2.1.2',
-        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap': '2.1.2',
-        'https://fonts.googleapis.com/icon?family=Material+Icons': '2.1.2'
+        'https://cdn.tailwindcss.com?plugins=forms,container-queries': '2.1.6',
+        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap': '2.1.6',
+        'https://fonts.googleapis.com/icon?family=Material+Icons': '2.1.6'
     }
 };
 

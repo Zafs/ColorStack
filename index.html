@@ -80,9 +80,9 @@
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
     
     <!-- External Resources -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries&v=2.1.2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap&amp;v=2.1.2" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons&amp;v=2.1.2" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries&v=2.1.6"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap&amp;v=2.1.6" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons&amp;v=2.1.6" rel="stylesheet"/>
     
     <!-- Vercel Analytics -->
     <script defer src="/_vercel/insights/script.js"></script>
@@ -934,23 +934,9 @@
     // Service Worker registration
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js')
+            navigator.serviceWorker.register('/sw.js?v=2.1.6')
                 .then(function(registration) {
                     console.log('Service Worker registered successfully:', registration.scope);
-                    
-                    // Check for updates
-                    registration.addEventListener('updatefound', function() {
-                        var newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', function() {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // New version available
-                                if (confirm('A new version of ColorStack is available. Would you like to update?')) {
-                                    newWorker.postMessage({type: 'SKIP_WAITING'});
-                                    window.location.reload();
-                                }
-                            }
-                        });
-                    });
                 })
                 .catch(function(error) {
                     console.error('Service Worker registration failed:', error);
@@ -960,7 +946,7 @@
 })();
 </script>
 
-        <script src="js/version.js?v=2.1.2"></script>
-        <script src="js/main.js?v=2.1.2"></script>
+        <script src="js/version.js?v=2.1.6"></script>
+        <script src="js/main.js?v=2.1.6"></script>
 </body>
 </html>
