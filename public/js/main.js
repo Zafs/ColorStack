@@ -91,111 +91,293 @@
     }
 
     /**
-     * Finds the dominant colors in an image using k-means clustering algorithm.
+     * Calculates the saturation of a color in RGB space.
+     * @param {number} r - Red component (0-255)
+     * @param {number} g - Green component (0-255)
+     * @param {number} b - Blue component (0-255)
+     * @returns {number} Saturation value (0-1, where 1 is most saturated)
+     */
+    function getSaturation(r, g, b) {
+        // Normalize RGB values to 0-1 range
+        const rNorm = r / 255;
+        const gNorm = g / 255;
+        const bNorm = b / 255;
+        
+        const max = Math.max(rNorm, gNorm, bNorm);
+        const min = Math.min(rNorm, gNorm, bNorm);
+        
+        // If max is 0, the color is black and has no saturation
+        if (max === 0) return 0;
+        
+        // Saturation = (max - min) / max
+        return (max - min) / max;
+    }
+
+    /**
+     * Converts RGB color values to CIE XYZ color space.
+     * @param {number} r - Red component (0-255)
+     * @param {number} g - Green component (0-255)
+     * @param {number} b - Blue component (0-255)
+     * @returns {Object} XYZ color values {x, y, z}
+     */
+    function rgbToXyz(r, g, b) {
+        // Normalize RGB values to 0-1 range
+        let rNorm = r / 255;
+        let gNorm = g / 255;
+        let bNorm = b / 255;
+        
+        // Apply gamma correction (sRGB to linear RGB)
+        rNorm = rNorm > 0.04045 ? Math.pow((rNorm + 0.055) / 1.055, 2.4) : rNorm / 12.92;
+        gNorm = gNorm > 0.04045 ? Math.pow((gNorm + 0.055) / 1.055, 2.4) : gNorm / 12.92;
+        bNorm = bNorm > 0.04045 ? Math.pow((bNorm + 0.055) / 1.055, 2.4) : bNorm / 12.92;
+        
+        // Apply sRGB to XYZ transformation matrix (D65 illuminant)
+        const x = rNorm * 0.4124564 + gNorm * 0.3575761 + bNorm * 0.1804375;
+        const y = rNorm * 0.2126729 + gNorm * 0.7151522 + bNorm * 0.0721750;
+        const z = rNorm * 0.0193339 + gNorm * 0.1191920 + bNorm * 0.9503041;
+        
+        return { x, y, z };
+    }
+
+    /**
+     * Converts CIE XYZ color values to CIELAB color space.
+     * @param {number} x - X component
+     * @param {number} y - Y component  
+     * @param {number} z - Z component
+     * @returns {Object} LAB color values {l, a, b}
+     */
+    function xyzToLab(x, y, z) {
+        // Reference white point (D65 illuminant)
+        const xn = 0.95047;
+        const yn = 1.00000;
+        const zn = 1.08883;
+        
+        // Normalize by reference white
+        const xr = x / xn;
+        const yr = y / yn;
+        const zr = z / zn;
+        
+        // Apply the CIELAB transformation function
+        const fx = xr > 0.008856 ? Math.pow(xr, 1/3) : (7.787 * xr + 16/116);
+        const fy = yr > 0.008856 ? Math.pow(yr, 1/3) : (7.787 * yr + 16/116);
+        const fz = zr > 0.008856 ? Math.pow(zr, 1/3) : (7.787 * zr + 16/116);
+        
+        // Calculate LAB values
+        const l = 116 * fy - 16;
+        const a = 500 * (fx - fy);
+        const b = 200 * (fy - fz);
+        
+        return { l, a, b };
+    }
+
+    /**
+     * Converts RGB color directly to CIELAB color space.
+     * @param {number} r - Red component (0-255)
+     * @param {number} g - Green component (0-255)
+     * @param {number} b - Blue component (0-255)
+     * @returns {Object} LAB color values {l, a, b}
+     */
+    function rgbToLab(r, g, b) {
+        const xyz = rgbToXyz(r, g, b);
+        return xyzToLab(xyz.x, xyz.y, xyz.z);
+    }
+
+    /**
+     * Calculates the Delta E (CIE76) distance between two colors in CIELAB space.
+     * This represents the perceptual difference between colors.
+     * @param {Object} lab1 - First color in LAB space {l, a, b}
+     * @param {Object} lab2 - Second color in LAB space {l, a, b}
+     * @returns {number} Delta E distance (higher = more perceptually different)
+     */
+    function calculateDeltaE(lab1, lab2) {
+        const deltaL = lab1.l - lab2.l;
+        const deltaA = lab1.a - lab2.a;
+        const deltaB = lab1.b - lab2.b;
+        
+        return Math.sqrt(deltaL * deltaL + deltaA * deltaA + deltaB * deltaB);
+    }
+
+    /**
+     * Performs Sobel edge detection on image data to identify edges.
+     * @param {Uint8ClampedArray} imageData - Raw RGBA image data
+     * @param {number} width - Image width in pixels
+     * @param {number} height - Image height in pixels
+     * @returns {Float32Array} Array of edge intensity values (0-1) for each pixel
+     */
+    function sobelEdgeDetection(imageData, width, height) {
+        // Convert to grayscale first for edge detection
+        const gray = new Float32Array(width * height);
+        for (let i = 0; i < imageData.length; i += 4) {
+            const pixelIndex = i / 4;
+            const r = imageData[i];
+            const g = imageData[i + 1];
+            const b = imageData[i + 2];
+            // Convert to grayscale using luminance formula
+            gray[pixelIndex] = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        }
+        
+        const edges = new Float32Array(width * height);
+        
+        // Sobel kernels
+        const sobelX = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+        const sobelY = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+        
+        // Apply Sobel operator (skip border pixels to avoid boundary checks)
+        for (let y = 1; y < height - 1; y++) {
+            for (let x = 1; x < width - 1; x++) {
+                let gx = 0;
+                let gy = 0;
+                
+                // Apply 3x3 convolution
+                for (let ky = -1; ky <= 1; ky++) {
+                    for (let kx = -1; kx <= 1; kx++) {
+                        const pixelIndex = (y + ky) * width + (x + kx);
+                        const kernelIndex = (ky + 1) * 3 + (kx + 1);
+                        const pixelValue = gray[pixelIndex];
+                        
+                        gx += pixelValue * sobelX[kernelIndex];
+                        gy += pixelValue * sobelY[kernelIndex];
+                    }
+                }
+                
+                // Calculate gradient magnitude and normalize to 0-1 range
+                const magnitude = Math.sqrt(gx * gx + gy * gy);
+                edges[y * width + x] = Math.min(magnitude / 4, 1); // Divide by 4 to normalize
+            }
+        }
+        
+        return edges;
+    }
+
+    /**
+     * Finds the most perceptually distinct colors using the Subject-Aware Maximal Color Distinction algorithm.
+     * This hybrid algorithm combines visual impact scoring, center-biased saliency, and CIELAB perceptual 
+     * distance optimization to prioritize important subject colors over background colors.
      *
-     * The k-means algorithm works in two main steps that repeat until convergence:
-     * 1. Assignment: Each pixel is assigned to the closest centroid (color)
-     * 2. Update: Centroids are recalculated as the mean of all assigned pixels
+     * The Subject-Aware Maximal Color Distinction algorithm works by:
+     * 1. Calculate center-biased saliency weights to prioritize central subjects
+     * 2. Generate a large pool of impactful candidate colors with enhanced scoring (4x oversampling)
+     * 3. Convert all candidates to CIELAB color space for perceptual accuracy
+     * 4. Use Farthest Point Selection to choose the most distinct colors
+     * 5. Return a palette where each color is maximally different from all others
      *
      * @param {Uint8ClampedArray} data - The RGBA image data (4 values per pixel: r,g,b,a)
-     * @param {number} k - The number of clusters (colors) to find
-     * @returns {Array<Array<number>>} An array of the k dominant colors, each as an [r, g, b] array
+     * @param {number} width - Image width in pixels
+     * @param {number} height - Image height in pixels
+     * @param {number} numColors - The number of colors to extract
+     * @returns {Array<Array<number>>} An array of the most distinct colors, each as an [r, g, b] array
      */
-    function kMeans(data, k) {
-        const maxIterations = 20;
-        const pixels = [];
-
-        // Downsample for performance: use 1 in every 4 pixels to reduce computation time
+    function getImpactfulColors(data, width, height, numColors) {
+        // Step 1: Oversample - generate a large pool of candidate colors
+        const candidateCount = Math.min(numColors * 4, 64); // Generate 4x candidates, max 64
+        
+        // Use existing impact-based algorithm to get candidate colors
+        const edgeData = sobelEdgeDetection(data, width, height);
+        const colorHistogram = new Map();
+        
+        // Calculate center coordinates and maximum distance for saliency weighting
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const maxDistance = Math.sqrt(centerX * centerX + centerY * centerY); // Distance to corner
+        
+        // Sample pixels - use every 4th pixel for performance while maintaining quality
         for (let i = 0; i < data.length; i += 16) {
-            pixels.push([data[i], data[i + 1], data[i + 2]]);
+            const pixelIndex = i / 4;
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const colorKey = `${r},${g},${b}`;
+            
+            // Calculate pixel coordinates from pixel index
+            const x = pixelIndex % width;
+            const y = Math.floor(pixelIndex / width);
+            
+            // Calculate center-biased saliency weight
+            const distanceFromCenter = Math.sqrt(
+                (x - centerX) * (x - centerX) + (y - centerY) * (y - centerY)
+            );
+            const saliencyWeight = 1.0 - (distanceFromCenter / maxDistance);
+            
+            // Calculate enhanced impact score with saliency weighting
+            const saturation = getSaturation(r, g, b);
+            const edginess = edgeData[pixelIndex] || 0;
+            const finalImpactScore = (1 + saturation * 2) * (1 + edginess) * (1 + saliencyWeight * 1.5);
+            
+            // Add to histogram
+            if (colorHistogram.has(colorKey)) {
+                colorHistogram.get(colorKey).impactScore += finalImpactScore;
+                colorHistogram.get(colorKey).pixelCount += 1;
+            } else {
+                colorHistogram.set(colorKey, { impactScore: finalImpactScore, pixelCount: 1 });
+            }
         }
-
-        // Initialize centroids using k-means++ algorithm for better distribution
-        let centroids = [];
-        if (pixels.length > k) {
-            // Start with a random pixel (but use a deterministic seed)
-            const seed = pixels.length + k; // Deterministic seed
-            const firstIndex = seed % pixels.length;
-            centroids.push([...pixels[firstIndex]]);
-
-            // Use k-means++ to select remaining centroids
-            for (let i = 1; i < k; i++) {
-                const distances = pixels.map(pixel => {
-                    let minDistance = Infinity;
-                    for (const centroid of centroids) {
-                        const distance = colorDistance(pixel, centroid);
-                        if (distance < minDistance) {
-                            minDistance = distance;
-                        }
-                    }
-                    return minDistance;
-                });
-
-                // Select next centroid with probability proportional to distance squared
-                const totalDistance = distances.reduce((sum, d) => sum + d, 0);
-                let randomValue = (seed * (i + 1)) % totalDistance; // Deterministic but pseudo-random
-
-                for (let j = 0; j < pixels.length; j++) {
-                    randomValue -= distances[j];
-                    if (randomValue <= 0) {
-                        centroids.push([...pixels[j]]);
-                        break;
+        
+        // Convert histogram to array and sort by impact score (highest first)
+        const allColors = [];
+        for (const [colorKey, data] of colorHistogram) {
+            const [r, g, b] = colorKey.split(',').map(Number);
+            allColors.push({ 
+                r, 
+                g, 
+                b, 
+                impactScore: data.impactScore,
+                pixelCount: data.pixelCount
+            });
+        }
+        
+        // Sort by impact score (highest first) and take top candidates
+        allColors.sort((a, b) => b.impactScore - a.impactScore);
+        const candidates = allColors.slice(0, candidateCount);
+        
+        // If we have fewer candidates than requested colors, return what we have
+        if (candidates.length <= numColors) {
+            return candidates.map(c => [c.r, c.g, c.b]);
+        }
+        
+        // Step 2: Convert all candidates to CIELAB color space
+        const candidatesLab = candidates.map(c => ({
+            ...c,
+            lab: rgbToLab(c.r, c.g, c.b)
+        }));
+        
+        // Step 3: Implement Farthest Point Selection
+        const finalPalette = [];
+        const remainingCandidates = [...candidatesLab];
+        
+        // Step 3a: Start with the most impactful color (first in sorted list)
+        finalPalette.push(remainingCandidates.shift());
+        
+        // Step 3b: Iteratively select the most distinct remaining colors
+        while (finalPalette.length < numColors && remainingCandidates.length > 0) {
+            let maxMinDistance = -1;
+            let bestCandidateIndex = 0;
+            
+            // Step 3b.i: For each remaining candidate, find its minimum distance to current palette
+            for (let i = 0; i < remainingCandidates.length; i++) {
+                const candidate = remainingCandidates[i];
+                let minDistanceToCurrentPalette = Infinity;
+                
+                // Find the minimum distance from this candidate to any color in current palette
+                for (const paletteColor of finalPalette) {
+                    const distance = calculateDeltaE(candidate.lab, paletteColor.lab);
+                    if (distance < minDistanceToCurrentPalette) {
+                        minDistanceToCurrentPalette = distance;
                     }
                 }
-            }
-        } else {
-            // If we have fewer pixels than k, use all pixels
-            centroids = pixels.slice(0, k);
-        }
-
-        // Main k-means iteration loop
-        for (let iter = 0; iter < maxIterations; iter++) {
-            const assignments = new Array(pixels.length);
-
-            // --- Assignment Step ---
-            // Assign each pixel to the closest centroid based on color distance
-            for (let i = 0; i < pixels.length; i++) {
-                let minDistance = Infinity;
-                let closestCentroidIndex = 0;
-                for (let j = 0; j < centroids.length; j++) {
-                    const distance = colorDistance(pixels[i], centroids[j]);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        closestCentroidIndex = j;
-                    }
-                }
-                assignments[i] = closestCentroidIndex;
-            }
-
-            // --- Update Step ---
-            // Recalculate centroids based on the mean of all pixels assigned to each cluster
-            const newCentroids = Array.from({ length: k }, () => [0, 0, 0]);
-            const counts = new Array(k).fill(0);
-
-            // Sum up all pixels assigned to each centroid
-            for (let i = 0; i < pixels.length; i++) {
-                const centroidIndex = assignments[i];
-                newCentroids[centroidIndex][0] += pixels[i][0]; // Sum red
-                newCentroids[centroidIndex][1] += pixels[i][1]; // Sum green
-                newCentroids[centroidIndex][2] += pixels[i][2]; // Sum blue
-                counts[centroidIndex]++;
-            }
-
-            // Calculate the mean (average) for each centroid
-            for (let i = 0; i < centroids.length; i++) {
-                if (counts[i] > 0) {
-                    newCentroids[i][0] /= counts[i]; // Average red
-                    newCentroids[i][1] /= counts[i]; // Average green
-                    newCentroids[i][2] /= counts[i]; // Average blue
-                } else {
-                    // If a centroid has no pixels, re-initialize it deterministically
-                    const fallbackIndex = (i * 7) % pixels.length; // Deterministic but spread out
-                    newCentroids[i] = [...pixels[fallbackIndex]];
+                
+                // Step 3b.ii: Track the candidate with the largest minimum distance
+                if (minDistanceToCurrentPalette > maxMinDistance) {
+                    maxMinDistance = minDistanceToCurrentPalette;
+                    bestCandidateIndex = i;
                 }
             }
-            centroids = newCentroids;
+            
+            // Add the most distinct candidate to final palette and remove from candidates
+            finalPalette.push(remainingCandidates.splice(bestCandidateIndex, 1)[0]);
         }
-        return centroids;
+        
+        // Step 4: Return the final palette in RGB format
+        return finalPalette.map(c => [c.r, c.g, c.b]);
     }
 
     /**
@@ -454,18 +636,20 @@
     }
 
     /**
-     * Extracts dominant colors from an image using k-means clustering.
+     * Extracts dominant colors from an image using Impactful Color algorithm.
      *
      * @param {Uint8ClampedArray} imageData - Raw RGBA image data
      * @param {number} bands - Number of dominant colors to extract
+     * @param {number} width - Image width in pixels
+     * @param {number} height - Image height in pixels
      * @returns {Array<string>} Array of hex color strings representing dominant colors
      */
-    function getSuggestedColors(imageData, bands) {
+    function getSuggestedColors(imageData, bands, width, height) {
         // Preprocess the image data to group very similar colors together
         const preprocessedData = preprocessImageData(imageData);
 
-        // Use k-means to find dominant colors
-        const dominantColors = kMeans(preprocessedData, bands);
+        // Use Impactful Color algorithm to find visually important colors
+        const dominantColors = getImpactfulColors(preprocessedData, width, height, bands);
         // Convert the [r,g,b] arrays to hex strings and ensure uniqueness
         const hexColors = dominantColors.map(c => rgbToHex(c[0], c[1], c[2]));
         return ensureUniqueColors(hexColors, imageData);
@@ -1510,7 +1694,7 @@
             } else {
                 // Fallback to synchronous processing
                 const data = imageData.data;
-                appState.suggestedPalette = getSuggestedColors(data, numBands);
+                appState.suggestedPalette = getSuggestedColors(data, numBands, img.width, img.height);
 
                 // Intelligently set the base layer by detecting background color
                 const backgroundColor = detectBackgroundColor(data, img.width, img.height);
