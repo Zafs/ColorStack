@@ -730,10 +730,13 @@
 <canvas id="origCanvas" class="rounded-lg object-cover w-full h-full"></canvas>
 </div>
 </div>
-<div class="card p-6">
+<div class="card p-6 relative">
 <h2 class="text-lg font-semibold mb-4">Processed Preview</h2>
 <div class="canvas-container">
 <canvas id="procCanvas" class="rounded-lg object-cover w-full h-full"></canvas>
+<div class="absolute top-2 right-2 px-3 py-1.5 bg-indigo-600 bg-opacity-90 border border-indigo-500 rounded-lg text-xs text-white font-medium shadow-lg">
+<span id="dimension-display-x">150.0</span> mm × <span id="dimension-display-y">120.0</span> mm
+</div>
 </div>
 </div>
 </div>
@@ -788,13 +791,19 @@
 </div>
 <div>
 <h3 class="text-base font-medium text-gray-300 mb-3">Model Dimensions</h3>
-<div class="grid grid-cols-2 gap-3">
-<div class="relative has-tooltip">
+<div class="flex items-end gap-3">
+<div class="flex-1 relative has-tooltip">
 <label class="text-xs text-gray-400 block mb-1" for="xSize">X Size</label>
             <input id="xSize" class="input-field text-sm p-2 text-center" type="number" min="10" max="1000" step="1" value="150"/>
 <div class="tooltip -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded">Width of the model</div>
 </div>
-<div class="relative has-tooltip">
+<div class="flex-shrink-0 relative has-tooltip">
+<button id="aspectRatioLockBtn" class="w-10 h-10 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-lg transition-colors duration-200 border border-gray-600 hover:border-gray-500">
+<span class="material-icons text-lg">link</span>
+</button>
+<div class="tooltip -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap">Toggle aspect ratio lock</div>
+</div>
+<div class="flex-1 relative has-tooltip">
 <label class="text-xs text-gray-400 block mb-1" for="ySize">Y Size</label>
             <input id="ySize" class="input-field text-sm p-2 text-center" type="number" min="10" max="1000" step="1" value="120"/>
 <div class="tooltip -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded">Depth of the model</div>

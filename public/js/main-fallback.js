@@ -753,6 +753,23 @@
         domElements.modal.style.display = 'none';
     }
 
+    /**
+     * Updates the dimension display on the processed preview canvas
+     * @param {number} xSize - X dimension in millimeters
+     * @param {number} ySize - Y dimension in millimeters
+     */
+    function updateDimensionDisplay(xSize, ySize) {
+        // Format the dimensions to 1 decimal place
+        const formattedX = parseFloat(xSize).toFixed(1);
+        const formattedY = parseFloat(ySize).toFixed(1);
+        
+        // Update dimension display overlay
+        const dimX = document.getElementById('dimension-display-x');
+        const dimY = document.getElementById('dimension-display-y');
+        if (dimX) dimX.textContent = formattedX;
+        if (dimY) dimY.textContent = formattedY;
+    }
+
     function resetApp(domElements) {
         const uploadArea = domElements.uploadArea;
         const mainContent = domElements.mainContent;
@@ -854,6 +871,33 @@
             appState.img.onload = function () {
                 console.log('Image loaded successfully');
                 try {
+                    // Implement automatic aspect ratio scaling for model dimensions
+                    const img = appState.img;
+                    const MAX_DIMENSION = 150;
+                    const aspectRatio = img.width / img.height;
+                    
+                    // Store the aspect ratio in appState for aspect ratio lock functionality
+                    appState.aspectRatio = aspectRatio;
+                    
+                    let newXSize, newYSize;
+                    
+                    if (img.width > img.height) {
+                        // Image is wider than it is tall
+                        newXSize = MAX_DIMENSION;
+                        newYSize = Math.round((MAX_DIMENSION / aspectRatio) * 10) / 10; // Round to 1 decimal place
+                    } else {
+                        // Image is taller than it is wide (or square)
+                        newYSize = MAX_DIMENSION;
+                        newXSize = Math.round((MAX_DIMENSION * aspectRatio) * 10) / 10; // Round to 1 decimal place
+                    }
+                    
+                    // Update the input field values
+                    domElements.xSizeInput.value = newXSize;
+                    domElements.ySizeInput.value = newYSize;
+
+                    // Update the dimension display overlays
+                    updateDimensionDisplay(newXSize, newYSize);
+
                     handleNumBandsChange();
                 } catch (error) {
                     console.error('Error processing image:', error);
@@ -1034,6 +1078,7 @@
                 baseThicknessInput: document.getElementById('baseThickness'),
                 xSizeInput: document.getElementById('xSize'),
                 ySizeInput: document.getElementById('ySize'),
+                aspectRatioLockBtn: document.getElementById('aspectRatioLockBtn'),
                 layerSlider: document.getElementById('layerSlider'),
                 layerValue: document.getElementById('layerValue'),
                 maxLayers: document.getElementById('maxLayers'),
@@ -1060,6 +1105,8 @@
                 suggestedPalette: [],
                 currentPalette: [],
                 activePalette: 'suggested',
+                isAspectRatioLocked: true, // Aspect ratio lock enabled by default
+                aspectRatio: 1, // Default aspect ratio (1:1)
             };
 
             window.appState = appState;
@@ -1191,6 +1238,9 @@
         }
     }
 
+    // Flag to prevent infinite loops when updating dimensions programmatically
+    let isUpdatingDimensions = false;
+
     function setupControlEventListeners() {
         try {
             if (domElements.numBandsInput) {
@@ -1206,10 +1256,44 @@
                 domElements.bandThicknessInput.addEventListener('input', handleSettingsChange);
             }
             if (domElements.xSizeInput) {
-                domElements.xSizeInput.addEventListener('input', handleSettingsChange);
+                domElements.xSizeInput.addEventListener('input', function() {
+                    // Prevent infinite loops when programmatically updating
+                    if (isUpdatingDimensions) return;
+                    
+                    const newX = parseFloat(domElements.xSizeInput.value);
+                    
+                    // If aspect ratio is locked, update Y proportionally
+                    if (appState.isAspectRatioLocked && appState.aspectRatio && !isNaN(newX)) {
+                        isUpdatingDimensions = true;
+                        const newY = Math.round((newX / appState.aspectRatio) * 10) / 10;
+                        domElements.ySizeInput.value = newY;
+                        isUpdatingDimensions = false;
+                    }
+                    
+                    // Update dimension display in real-time
+                    updateDimensionDisplay(domElements.xSizeInput.value, domElements.ySizeInput.value);
+                    handleSettingsChange();
+                });
             }
             if (domElements.ySizeInput) {
-                domElements.ySizeInput.addEventListener('input', handleSettingsChange);
+                domElements.ySizeInput.addEventListener('input', function() {
+                    // Prevent infinite loops when programmatically updating
+                    if (isUpdatingDimensions) return;
+                    
+                    const newY = parseFloat(domElements.ySizeInput.value);
+                    
+                    // If aspect ratio is locked, update X proportionally
+                    if (appState.isAspectRatioLocked && appState.aspectRatio && !isNaN(newY)) {
+                        isUpdatingDimensions = true;
+                        const newX = Math.round((newY * appState.aspectRatio) * 10) / 10;
+                        domElements.xSizeInput.value = newX;
+                        isUpdatingDimensions = false;
+                    }
+                    
+                    // Update dimension display in real-time
+                    updateDimensionDisplay(domElements.xSizeInput.value, domElements.ySizeInput.value);
+                    handleSettingsChange();
+                });
             }
             if (domElements.layerSlider) {
                 domElements.layerSlider.addEventListener('input', function () {
@@ -1220,6 +1304,18 @@
             }
             if (domElements.singleLayerToggle) {
                 domElements.singleLayerToggle.addEventListener('change', handleSettingsChange);
+            }
+            if (domElements.aspectRatioLockBtn) {
+                domElements.aspectRatioLockBtn.onclick = function() {
+                    // Toggle the aspect ratio lock state
+                    appState.isAspectRatioLocked = !appState.isAspectRatioLocked;
+                    
+                    // Update the button icon
+                    const icon = domElements.aspectRatioLockBtn.querySelector('.material-icons');
+                    if (icon) {
+                        icon.textContent = appState.isAspectRatioLocked ? 'link' : 'link_off';
+                    }
+                };
             }
             if (domElements.addFilamentBtn) {
                 domElements.addFilamentBtn.onclick = addFilament;
