@@ -1260,6 +1260,14 @@
                     // Prevent infinite loops when programmatically updating
                     if (isUpdatingDimensions) return;
                     
+                    // Limit X size to valid range (10mm - 500mm)
+                    if (parseFloat(domElements.xSizeInput.value) > 500) {
+                        domElements.xSizeInput.value = 500;
+                    }
+                    if (parseFloat(domElements.xSizeInput.value) < 10) {
+                        domElements.xSizeInput.value = 10;
+                    }
+                    
                     const newX = parseFloat(domElements.xSizeInput.value);
                     
                     // If aspect ratio is locked, update Y proportionally
@@ -1279,6 +1287,14 @@
                 domElements.ySizeInput.addEventListener('input', function() {
                     // Prevent infinite loops when programmatically updating
                     if (isUpdatingDimensions) return;
+                    
+                    // Limit Y size to valid range (10mm - 500mm)
+                    if (parseFloat(domElements.ySizeInput.value) > 500) {
+                        domElements.ySizeInput.value = 500;
+                    }
+                    if (parseFloat(domElements.ySizeInput.value) < 10) {
+                        domElements.ySizeInput.value = 10;
+                    }
                     
                     const newY = parseFloat(domElements.ySizeInput.value);
                     

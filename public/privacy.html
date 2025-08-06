@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
     
     <!-- Primary Meta Tags -->
     <title>Privacy Policy - ColorStack</title>
@@ -336,99 +336,250 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Responsive design improvements */
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 20px;
+                margin: 16px;
+            }
+            
+            .btn-primary, .btn-secondary {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+            
+            body {
+                padding: 8px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .modal-content {
+                padding: 16px;
+                margin: 8px;
+            }
+            
+            .btn-primary, .btn-secondary {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            body {
+                padding: 4px;
+            }
+            
+            .card {
+                padding: 12px;
+            }
+        }
+        
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .btn-primary, .btn-secondary {
+                min-height: 44px;
+            }
+            
+            input[type="range"]::-webkit-slider-thumb {
+                width: 20px;
+                height: 20px;
+            }
+            
+            input[type="range"]::-moz-range-thumb {
+                width: 20px;
+                height: 20px;
+            }
+        }
+        
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .card {
+                border-width: 2px;
+            }
+            
+            .btn-primary {
+                border: 2px solid #ffffff;
+            }
+            
+            .btn-secondary {
+                border-width: 2px;
+            }
+        }
+        
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            .btn-primary, .btn-secondary {
+                transition: none;
+            }
+            
+            .spinner-content {
+                animation: none;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #0A0A0A;
+                color: #E0E0E0;
+            }
+        }
+        
+        /* Light mode fallback */
+        @media (prefers-color-scheme: light) {
+            body {
+                background-color: #0A0A0A;
+                color: #E0E0E0;
+            }
+        }
+        
+        /* Focus styles for better accessibility */
+        .btn-primary:focus,
+        .btn-secondary:focus,
+        .input-field:focus {
+            outline: 2px solid #6366F1;
+            outline-offset: 2px;
+        }
+        
+        /* Enhanced font smoothing and rendering */
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            overflow-x: hidden;
+        }
+        
+        /* Skip link for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: #6366F1;
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 1000;
+        }
+        
+        .skip-link:focus {
+            top: 6px;
+        }
+        
+        /* Button improvements for touch */
+        .btn-primary, .btn-secondary {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .btn-primary:active {
+            background-color: #4338CA;
+        }
+        
+        .btn-secondary:active {
+            background-color: #555555;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-6 lg:p-8">
+<!-- Skip link for accessibility -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
     <div class="max-w-4xl mx-auto">
         <!-- Header -->
-        <header class="flex justify-between items-center mb-8">
-            <div class="flex items-center gap-4">
-                <a href="/" class="text-3xl font-bold text-white hover:text-indigo-400 transition-colors">ColorStack</a>
-                <span class="text-gray-400">/</span>
-                <h1 class="text-2xl font-semibold text-gray-300">Privacy Policy</h1>
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <a href="/" class="text-2xl sm:text-3xl font-bold text-white hover:text-indigo-400 transition-colors">ColorStack</a>
+                <span class="text-gray-400 hidden sm:inline">/</span>
+                <h1 class="text-xl sm:text-2xl font-semibold text-gray-300">Privacy Policy</h1>
             </div>
-            <a href="/" class="btn-secondary flex items-center gap-2">
+            <a href="/" class="btn-secondary flex items-center gap-2 self-start sm:self-auto">
                 <span class="material-icons">arrow_back</span>
-                Back to App
+                <span class="hidden xs:inline">Back to App</span>
+                <span class="xs:hidden">Back</span>
             </a>
         </header>
 
         <!-- Main Content -->
-        <main class="card p-8">
+        <main id="main-content" class="card p-4 sm:p-6 lg:p-8">
             <div class="prose prose-invert max-w-none">
-                <div class="text-center mb-8">
-                    <h2 class="text-3xl font-bold text-white mb-4">📄 ColorStack – Privacy Policy</h2>
-                    <p class="text-gray-400">Effective Date: January 1, 2024</p>
+                <div class="text-center mb-6 sm:mb-8">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">📄 ColorStack – Privacy Policy</h2>
+                    <p class="text-sm sm:text-base text-gray-400">Effective Date: January 1, 2024</p>
                 </div>
 
-                <div class="space-y-8">
+                <div class="space-y-6 sm:space-y-8">
                     <div>
-                        <p class="text-gray-300 leading-relaxed">
+                        <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
                             ColorStack ("we", "us", or "our") respects your privacy. This Privacy Policy explains what data we (don't) collect and how we handle any personal information you provide.
                         </p>
                     </div>
 
                     <div>
-                        <h3 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <h3 class="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
                             <span class="text-2xl">🧠</span>
                             What We Collect
                         </h3>
                         <div class="space-y-3 text-gray-300">
-                            <p>We do not collect personal information unless you choose to sign in using a third-party service (like Google or Discord). In that case, basic info such as your name, email, and profile picture may be shared with us via Clerk, our authentication provider.</p>
-                            <p>We do not store passwords or sensitive personal data.</p>
-                            <p>We use Vercel Analytics, a privacy-focused analytics tool provided by Vercel, to understand how people use the site. This tool does not use cookies or track personal information.</p>
+                            <p class="text-sm sm:text-base">We do not collect personal information unless you choose to sign in using a third-party service (like Google or Discord). In that case, basic info such as your name, email, and profile picture may be shared with us via Clerk, our authentication provider.</p>
+                            <p class="text-sm sm:text-base">We do not store passwords or sensitive personal data.</p>
+                            <p class="text-sm sm:text-base">We use Vercel Analytics, a privacy-focused analytics tool provided by Vercel, to understand how people use the site. This tool does not use cookies or track personal information.</p>
                         </div>
                     </div>
 
                     <div>
-                        <h3 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <h3 class="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
                             <span class="text-2xl">📁</span>
                             File Uploads
                         </h3>
-                        <p class="text-gray-300 leading-relaxed">
+                        <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
                             When you upload images or 3D files (STL, PNG, etc.), those files are processed either directly in your browser or temporarily on our servers. We do not retain or share your files after processing is complete.
                         </p>
                     </div>
 
                     <div>
-                        <h3 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <h3 class="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
                             <span class="text-2xl">🔐</span>
                             Third-Party Services
                         </h3>
-                        <p class="text-gray-300 mb-3">We use:</p>
-                        <ul class="list-disc list-inside space-y-2 text-gray-300 ml-4">
+                        <p class="text-sm sm:text-base text-gray-300 mb-3">We use:</p>
+                        <ul class="list-disc list-inside space-y-2 text-sm sm:text-base text-gray-300 ml-4">
                             <li><strong>Clerk.dev</strong> for secure user authentication</li>
                             <li><strong>Vercel Analytics</strong> for privacy-first analytics</li>
                         </ul>
-                        <p class="text-gray-300 mt-3">These services may collect basic info as part of their functionality. Please refer to their privacy policies for details.</p>
+                        <p class="text-sm sm:text-base text-gray-300 mt-3">These services may collect basic info as part of their functionality. Please refer to their privacy policies for details.</p>
                     </div>
 
                     <div>
-                        <h3 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <h3 class="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
                             <span class="text-2xl">💡</span>
                             Your Choices
                         </h3>
-                        <p class="text-gray-300 leading-relaxed">
+                        <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
                             You can use most features of ColorStack without logging in. If you choose to sign in, you may request account deletion at any time by contacting us.
                         </p>
                     </div>
 
                     <div>
-                        <h3 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <h3 class="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
                             <span class="text-2xl">🧽</span>
                             Data Sharing
                         </h3>
-                        <p class="text-gray-300 leading-relaxed">
+                        <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
                             We do not sell or share your data with third parties. Ever.
                         </p>
                     </div>
 
                     <div>
-                        <h3 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <h3 class="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
                             <span class="text-2xl">📬</span>
                             Contact Us
                         </h3>
-                        <p class="text-gray-300 leading-relaxed">
+                        <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
                             Questions? Concerns? Hit us up at <a href="mailto:privacy@preview.colorstack.app" class="text-indigo-400 hover:text-indigo-300 transition-colors">privacy@preview.colorstack.app</a>.
                         </p>
                     </div>
@@ -453,5 +604,44 @@
             </div>
         </footer>
     </div>
+
+<!-- Polyfill for older browsers -->
+<script>
+// Feature detection and polyfills
+(function() {
+    'use strict';
+    
+    // Check for ES6 module support
+    if (!window.Promise) {
+        // Load Promise polyfill if needed
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js';
+        document.head.appendChild(script);
+    }
+    
+    // Check for fetch support
+    if (!window.fetch) {
+        // Load fetch polyfill if needed
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.2/dist/fetch.umd.js';
+        document.head.appendChild(script);
+    }
+    
+    // Add touch event support for mobile devices
+    if ('ontouchstart' in window) {
+        document.body.classList.add('touch-device');
+    }
+    
+    // Add reduced motion support
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.body.classList.add('reduced-motion');
+    }
+    
+    // Add high contrast mode support
+    if (window.matchMedia && window.matchMedia('(prefers-contrast: high)').matches) {
+        document.body.classList.add('high-contrast');
+    }
+})();
+</script>
 </body>
 </html> 
