@@ -1260,12 +1260,9 @@
                     // Prevent infinite loops when programmatically updating
                     if (isUpdatingDimensions) return;
                     
-                    // Limit X size to valid range (10mm - 500mm)
+                    // Only limit maximum during typing (doesn't interfere with user input)
                     if (parseFloat(domElements.xSizeInput.value) > 500) {
                         domElements.xSizeInput.value = 500;
-                    }
-                    if (parseFloat(domElements.xSizeInput.value) < 10) {
-                        domElements.xSizeInput.value = 10;
                     }
                     
                     const newX = parseFloat(domElements.xSizeInput.value);
@@ -1282,18 +1279,25 @@
                     updateDimensionDisplay(domElements.xSizeInput.value, domElements.ySizeInput.value);
                     handleSettingsChange();
                 });
+                
+                // Validate minimum when user finishes editing
+                domElements.xSizeInput.addEventListener('blur', function() {
+                    if (parseFloat(domElements.xSizeInput.value) < 10 || isNaN(parseFloat(domElements.xSizeInput.value))) {
+                        domElements.xSizeInput.value = 10;
+                        // Update dimension display and trigger aspect ratio recalculation
+                        updateDimensionDisplay(domElements.xSizeInput.value, domElements.ySizeInput.value);
+                        handleSettingsChange();
+                    }
+                });
             }
             if (domElements.ySizeInput) {
                 domElements.ySizeInput.addEventListener('input', function() {
                     // Prevent infinite loops when programmatically updating
                     if (isUpdatingDimensions) return;
                     
-                    // Limit Y size to valid range (10mm - 500mm)
+                    // Only limit maximum during typing (doesn't interfere with user input)
                     if (parseFloat(domElements.ySizeInput.value) > 500) {
                         domElements.ySizeInput.value = 500;
-                    }
-                    if (parseFloat(domElements.ySizeInput.value) < 10) {
-                        domElements.ySizeInput.value = 10;
                     }
                     
                     const newY = parseFloat(domElements.ySizeInput.value);
@@ -1309,6 +1313,16 @@
                     // Update dimension display in real-time
                     updateDimensionDisplay(domElements.xSizeInput.value, domElements.ySizeInput.value);
                     handleSettingsChange();
+                });
+                
+                // Validate minimum when user finishes editing
+                domElements.ySizeInput.addEventListener('blur', function() {
+                    if (parseFloat(domElements.ySizeInput.value) < 10 || isNaN(parseFloat(domElements.ySizeInput.value))) {
+                        domElements.ySizeInput.value = 10;
+                        // Update dimension display and trigger aspect ratio recalculation
+                        updateDimensionDisplay(domElements.xSizeInput.value, domElements.ySizeInput.value);
+                        handleSettingsChange();
+                    }
                 });
             }
             if (domElements.layerSlider) {
