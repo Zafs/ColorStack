@@ -2004,13 +2004,34 @@
                 domElements.numBandsInput.addEventListener('input', debounce(handleNumBandsChange, 250));
             }
             if (domElements.layerHeightInput) {
-                domElements.layerHeightInput.addEventListener('input', handleSettingsChange);
+                domElements.layerHeightInput.addEventListener('input', () => {
+                    // --- START NEW LOGIC ---
+                    if (parseFloat(domElements.layerHeightInput.value) > 1) {
+                        domElements.layerHeightInput.value = 1;
+                    }
+                    // --- END NEW LOGIC ---
+                    handleSettingsChange();
+                });
             }
             if (domElements.baseThicknessInput) {
-                domElements.baseThicknessInput.addEventListener('input', handleSettingsChange);
+                domElements.baseThicknessInput.addEventListener('input', () => {
+                    // --- START NEW LOGIC ---
+                    if (parseInt(domElements.baseThicknessInput.value, 10) > 20) {
+                        domElements.baseThicknessInput.value = 20;
+                    }
+                    // --- END NEW LOGIC ---
+                    handleSettingsChange();
+                });
             }
             if (domElements.bandThicknessInput) {
-                domElements.bandThicknessInput.addEventListener('input', handleSettingsChange);
+                domElements.bandThicknessInput.addEventListener('input', () => {
+                    // --- START NEW LOGIC ---
+                    if (parseInt(domElements.bandThicknessInput.value, 10) > 20) {
+                        domElements.bandThicknessInput.value = 20;
+                    }
+                    // --- END NEW LOGIC ---
+                    handleSettingsChange();
+                });
             }
             if (domElements.xSizeInput) {
                 domElements.xSizeInput.addEventListener('input', handleSettingsChange);
