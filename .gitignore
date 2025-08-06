@@ -64,3 +64,13 @@ jspm_packages/
 
 # dotenv environment variables file
 .env
+
+# Ignore all JSON files...
+*.json
+
+# ...except for these specific ones.
+!package.json
+!package-lock.json
+!/public/manifest.json
+!/.eslintrc.json
+!/.prettierrc
