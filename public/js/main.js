@@ -376,8 +376,100 @@
             finalPalette.push(remainingCandidates.splice(bestCandidateIndex, 1)[0]);
         }
         
-        // Step 4: Return the final palette in RGB format
-        return finalPalette.map(c => [c.r, c.g, c.b]);
+            // Step 4: Return the final palette in RGB format
+    const finalPaletteRGB = finalPalette.map(c => [c.r, c.g, c.b]);
+    
+    // Step 5: Intelligent base layer ordering
+    // Detect the true background color of the image
+    const backgroundColor = detectBackgroundColor(data, width, height);
+    
+    // Find the color in the final palette that is closest to the background color
+    let closestColorIndex = 0;
+    let minDistance = Infinity;
+    
+    for (let i = 0; i < finalPaletteRGB.length; i++) {
+        const paletteColor = finalPaletteRGB[i];
+        const distance = calculateDeltaE(
+            rgbToLab(paletteColor[0], paletteColor[1], paletteColor[2]),
+            rgbToLab(backgroundColor[0], backgroundColor[1], backgroundColor[2])
+        );
+        
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestColorIndex = i;
+        }
+    }
+    
+    // Move the closest-matching color to the first position (index 0)
+    if (closestColorIndex > 0) {
+        const closestColor = finalPaletteRGB[closestColorIndex];
+        finalPaletteRGB.splice(closestColorIndex, 1);
+        finalPaletteRGB.unshift(closestColor);
+    }
+    
+    // Step 6: Thin Feature sorting pass
+    // Create a temporary bandMap using the final palette to analyze color usage
+    const tempBandMap = new Float32Array(data.length / 4);
+    
+    // Create temporary bandMap by assigning each pixel to the closest color in finalPaletteRGB
+    for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+        const pixelColor = [data[i], data[i + 1], data[i + 2]];
+        
+        // Find the closest color in the final palette
+        let minDistance = Infinity;
+        let bandIndex = 0;
+        for (let k = 0; k < finalPaletteRGB.length; k++) {
+            const distance = colorDistance(pixelColor, finalPaletteRGB[k]);
+            if (distance < minDistance) {
+                minDistance = distance;
+                bandIndex = k;
+            }
+        }
+        tempBandMap[j] = bandIndex;
+    }
+    
+    // Step A: Analyze color usage to get pixel counts
+    const colorUsage = analyzeColorUsage(tempBandMap, width, height);
+    
+    // Step B: Separate base layer (index 0) from detail colors
+    const baseLayer = finalPaletteRGB[0];
+    const detailColors = finalPaletteRGB.slice(1);
+    
+    // Step C: Sort detail colors by pixel count (fewest to most)
+    detailColors.sort((a, b) => {
+        const aIndex = finalPaletteRGB.indexOf(a);
+        const bIndex = finalPaletteRGB.indexOf(b);
+        const aCount = colorUsage[aIndex] || 0;
+        const bCount = colorUsage[bIndex] || 0;
+        return aCount - bCount; // Fewest pixels first (thin features)
+    });
+    
+    // Step D: Concatenate base layer with sorted detail colors
+    finalPaletteRGB.length = 0; // Clear array
+    finalPaletteRGB.push(baseLayer, ...detailColors);
+    
+    return finalPaletteRGB;
+    }
+
+    /**
+     * Analyzes the usage of each color in the bandMap to determine pixel counts.
+     * This helps identify which colors are used for thin features vs. large areas.
+     * 
+     * @param {Float32Array} bandMap - Array where each element represents which color band a pixel belongs to
+     * @param {number} width - Width of the image
+     * @param {number} height - Height of the image
+     * @returns {Object} Object mapping color indices to their pixel counts
+     */
+    function analyzeColorUsage(bandMap, width, height) {
+        const colorUsage = {};
+        
+        // Iterate through the bandMap to count pixels for each color
+        for (let i = 0; i < bandMap.length; i++) {
+            const colorIndex = Math.floor(bandMap[i]);
+            colorUsage[colorIndex] = (colorUsage[colorIndex] || 0) + 1;
+        }
+        
+        return colorUsage;
     }
 
     /**
@@ -572,6 +664,69 @@
      * @returns {Array<number>} RGB array [r, g, b] of the detected background color
      */
     function detectBackgroundColor(imageData, width, height) {
+        // Step 1: Check the four corner pixels first
+        const cornerColors = [];
+        
+        // Top-left corner
+        const topLeftIndex = (0 + 0 * width) * 4;
+        cornerColors.push([
+            imageData[topLeftIndex],
+            imageData[topLeftIndex + 1],
+            imageData[topLeftIndex + 2]
+        ]);
+        
+        // Top-right corner
+        const topRightIndex = (width - 1 + 0 * width) * 4;
+        cornerColors.push([
+            imageData[topRightIndex],
+            imageData[topRightIndex + 1],
+            imageData[topRightIndex + 2]
+        ]);
+        
+        // Bottom-left corner
+        const bottomLeftIndex = (0 + (height - 1) * width) * 4;
+        cornerColors.push([
+            imageData[bottomLeftIndex],
+            imageData[bottomLeftIndex + 1],
+            imageData[bottomLeftIndex + 2]
+        ]);
+        
+        // Bottom-right corner
+        const bottomRightIndex = (width - 1 + (height - 1) * width) * 4;
+        cornerColors.push([
+            imageData[bottomRightIndex],
+            imageData[bottomRightIndex + 1],
+            imageData[bottomRightIndex + 2]
+        ]);
+        
+        // Step 2: Check if corner colors are similar (within threshold)
+        const colorDistanceThreshold = 1000; // Threshold for RGB squared distance
+        let cornersAreSimilar = true;
+        
+        // Convert corner colors to CIELAB for more accurate comparison
+        const cornerColorsLab = cornerColors.map(color => rgbToLab(color[0], color[1], color[2]));
+        
+        // Check if all corners are within threshold of each other
+        for (let i = 0; i < cornerColorsLab.length; i++) {
+            for (let j = i + 1; j < cornerColorsLab.length; j++) {
+                const distance = calculateDeltaE(cornerColorsLab[i], cornerColorsLab[j]);
+                if (distance > 15) { // CIELAB threshold (15 is a reasonable perceptual difference)
+                    cornersAreSimilar = false;
+                    break;
+                }
+            }
+            if (!cornersAreSimilar) break;
+        }
+        
+        // Step 3: If corners are similar, return their average color
+        if (cornersAreSimilar) {
+            const avgR = Math.round(cornerColors.reduce((sum, color) => sum + color[0], 0) / 4);
+            const avgG = Math.round(cornerColors.reduce((sum, color) => sum + color[1], 0) / 4);
+            const avgB = Math.round(cornerColors.reduce((sum, color) => sum + color[2], 0) / 4);
+            return [avgR, avgG, avgB];
+        }
+        
+        // Step 4: Fall back to existing border sampling logic
         const colorCounts = new Map();
 
         // Sample pixels along the border (1-pixel width)
@@ -1058,13 +1213,19 @@
         paletteDiv.innerHTML = '';
         colors.forEach((color, index) => {
             const colorDiv = document.createElement('div');
-            colorDiv.className = 'relative group cursor-pointer';
+            colorDiv.className = 'relative group cursor-grab';
 
             // Create the color swatch
             const colorSwatch = document.createElement('div');
             colorSwatch.className =
                 'w-8 h-8 rounded border-2 border-gray-600 hover:border-indigo-400 transition-all duration-200 hover:scale-110';
             colorSwatch.style.backgroundColor = color;
+
+            // Add drag handle icon
+            const dragHandle = document.createElement('span');
+            dragHandle.className = 'material-icons absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 group-hover:opacity-50 transition-opacity text-xs';
+            dragHandle.textContent = 'drag_indicator';
+            colorDiv.appendChild(dragHandle);
 
             // Add click handler for color picker
             if (!readOnly) {
@@ -1807,6 +1968,44 @@
                 appState.currentPalette = appState.suggestedPalette.slice(); // Create a copy
                 renderPalette(appState.currentPalette, paletteDiv, handleSettingsChange, false);
             }
+            
+            // Initialize SortableJS for drag-and-drop reordering
+            if (typeof Sortable !== 'undefined') {
+                // Destroy any existing Sortable instance
+                if (paletteDiv.sortable) {
+                    paletteDiv.sortable.destroy();
+                }
+                
+                // Create new Sortable instance
+                paletteDiv.sortable = Sortable.create(paletteDiv, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onEnd: function(evt) {
+                        // Get the new order of color elements from the DOM
+                        const colorElements = Array.from(paletteDiv.children);
+                        const newColorOrder = colorElements.map(element => {
+                            const colorSwatch = element.querySelector('div[style*="background-color"]');
+                            if (colorSwatch) {
+                                const rgbStyle = colorSwatch.style.backgroundColor;
+                                return rgbToHexFromStyle(rgbStyle);
+                            }
+                            return null;
+                        }).filter(color => color !== null);
+                        
+                        // Update appState.currentPalette with the new order
+                        if (newColorOrder.length > 0) {
+                            appState.currentPalette = newColorOrder;
+                            // Update appState.suggestedPalette to keep structural data in sync
+                            appState.suggestedPalette = newColorOrder;
+                            // Re-render the "Processed Preview" with the new color order
+                            handleSettingsChange();
+                        }
+                    }
+                });
+            }
+            
             handleSettingsChange();
         } catch (error) {
             console.error('Error updating palette:', error);

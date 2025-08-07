@@ -4,13 +4,19 @@ export function renderPalette(colors, paletteDiv, onColorChange, readOnly = fals
     paletteDiv.innerHTML = '';
     colors.forEach((color, index) => {
         const colorDiv = document.createElement('div');
-        colorDiv.className = 'relative group cursor-pointer';
+        colorDiv.className = 'relative group cursor-grab';
 
         // Create the color swatch
         const colorSwatch = document.createElement('div');
         colorSwatch.className =
             'w-8 h-8 rounded border-2 border-gray-600 hover:border-indigo-400 transition-all duration-200 hover:scale-110';
         colorSwatch.style.backgroundColor = color;
+
+        // Add drag handle icon
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'material-icons absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 group-hover:opacity-50 transition-opacity text-xs';
+        dragHandle.textContent = 'drag_indicator';
+        colorDiv.appendChild(dragHandle);
 
         // Add click handler for color picker
         if (!readOnly) {

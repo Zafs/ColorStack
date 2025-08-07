@@ -340,7 +340,99 @@ function getImpactfulColors(data, width, height, numColors) {
     }
     
     // Step 4: Return the final palette in RGB format
-    return finalPalette.map(c => [c.r, c.g, c.b]);
+    const finalPaletteRGB = finalPalette.map(c => [c.r, c.g, c.b]);
+    
+    // Step 5: Intelligent base layer ordering
+    // Detect the true background color of the image
+    const backgroundColor = detectBackgroundColor(data, width, height);
+    
+    // Find the color in the final palette that is closest to the background color
+    let closestColorIndex = 0;
+    let minDistance = Infinity;
+    
+    for (let i = 0; i < finalPaletteRGB.length; i++) {
+        const paletteColor = finalPaletteRGB[i];
+        const distance = calculateDeltaE(
+            rgbToLab(paletteColor[0], paletteColor[1], paletteColor[2]),
+            rgbToLab(backgroundColor[0], backgroundColor[1], backgroundColor[2])
+        );
+        
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestColorIndex = i;
+        }
+    }
+    
+    // Move the closest-matching color to the first position (index 0)
+    if (closestColorIndex > 0) {
+        const closestColor = finalPaletteRGB[closestColorIndex];
+        finalPaletteRGB.splice(closestColorIndex, 1);
+        finalPaletteRGB.unshift(closestColor);
+    }
+    
+    // Step 6: Thin Feature sorting pass
+    // Create a temporary bandMap using the final palette to analyze color usage
+    const tempBandMap = new Float32Array(data.length / 4);
+    
+    // Create temporary bandMap by assigning each pixel to the closest color in finalPaletteRGB
+    for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+        const pixelColor = [data[i], data[i + 1], data[i + 2]];
+        
+        // Find the closest color in the final palette
+        let minDistance = Infinity;
+        let bandIndex = 0;
+        for (let k = 0; k < finalPaletteRGB.length; k++) {
+            const distance = colorDistance(pixelColor, finalPaletteRGB[k]);
+            if (distance < minDistance) {
+                minDistance = distance;
+                bandIndex = k;
+            }
+        }
+        tempBandMap[j] = bandIndex;
+    }
+    
+    // Step A: Analyze color usage to get pixel counts
+    const colorUsage = analyzeColorUsage(tempBandMap, width, height);
+    
+    // Step B: Separate base layer (index 0) from detail colors
+    const baseLayer = finalPaletteRGB[0];
+    const detailColors = finalPaletteRGB.slice(1);
+    
+    // Step C: Sort detail colors by pixel count (fewest to most)
+    detailColors.sort((a, b) => {
+        const aIndex = finalPaletteRGB.indexOf(a);
+        const bIndex = finalPaletteRGB.indexOf(b);
+        const aCount = colorUsage[aIndex] || 0;
+        const bCount = colorUsage[bIndex] || 0;
+        return aCount - bCount; // Fewest pixels first (thin features)
+    });
+    
+    // Step D: Concatenate base layer with sorted detail colors
+    finalPaletteRGB.length = 0; // Clear array
+    finalPaletteRGB.push(baseLayer, ...detailColors);
+    
+    return finalPaletteRGB;
+}
+
+/**
+ * Analyzes the usage of each color in the bandMap to determine pixel counts.
+ * This helps identify which colors are used for thin features vs. large areas.
+ * 
+ * @param {Float32Array} bandMap - Array where each element represents which color band a pixel belongs to
+ * @param {number} width - Width of the image
+ * @param {number} height - Height of the image
+ * @returns {Object} Object mapping color indices to their pixel counts
+ */
+function analyzeColorUsage(bandMap, width, height) {
+    const colorUsage = {};
+    
+    // Iterate through the bandMap to count pixels for each color
+    for (let i = 0; i < bandMap.length; i++) {
+        const colorIndex = Math.floor(bandMap[i]);
+        colorUsage[colorIndex] = (colorUsage[colorIndex] || 0) + 1;
+    }
+    
+    return colorUsage;
 }
 
 /**
@@ -552,6 +644,69 @@ function getSuggestedColors(imageData, bands, width, height) {
  * @returns {Array<number>} RGB array [r, g, b] of the detected background color
  */
 function detectBackgroundColor(imageData, width, height) {
+    // Step 1: Check the four corner pixels first
+    const cornerColors = [];
+    
+    // Top-left corner
+    const topLeftIndex = (0 + 0 * width) * 4;
+    cornerColors.push([
+        imageData[topLeftIndex],
+        imageData[topLeftIndex + 1],
+        imageData[topLeftIndex + 2]
+    ]);
+    
+    // Top-right corner
+    const topRightIndex = (width - 1 + 0 * width) * 4;
+    cornerColors.push([
+        imageData[topRightIndex],
+        imageData[topRightIndex + 1],
+        imageData[topRightIndex + 2]
+    ]);
+    
+    // Bottom-left corner
+    const bottomLeftIndex = (0 + (height - 1) * width) * 4;
+    cornerColors.push([
+        imageData[bottomLeftIndex],
+        imageData[bottomLeftIndex + 1],
+        imageData[bottomLeftIndex + 2]
+    ]);
+    
+    // Bottom-right corner
+    const bottomRightIndex = (width - 1 + (height - 1) * width) * 4;
+    cornerColors.push([
+        imageData[bottomRightIndex],
+        imageData[bottomRightIndex + 1],
+        imageData[bottomRightIndex + 2]
+    ]);
+    
+    // Step 2: Check if corner colors are similar (within threshold)
+    const colorDistanceThreshold = 1000; // Threshold for RGB squared distance
+    let cornersAreSimilar = true;
+    
+    // Convert corner colors to CIELAB for more accurate comparison
+    const cornerColorsLab = cornerColors.map(color => rgbToLab(color[0], color[1], color[2]));
+    
+    // Check if all corners are within threshold of each other
+    for (let i = 0; i < cornerColorsLab.length; i++) {
+        for (let j = i + 1; j < cornerColorsLab.length; j++) {
+            const distance = calculateDeltaE(cornerColorsLab[i], cornerColorsLab[j]);
+            if (distance > 15) { // CIELAB threshold (15 is a reasonable perceptual difference)
+                cornersAreSimilar = false;
+                break;
+            }
+        }
+        if (!cornersAreSimilar) break;
+    }
+    
+    // Step 3: If corners are similar, return their average color
+    if (cornersAreSimilar) {
+        const avgR = Math.round(cornerColors.reduce((sum, color) => sum + color[0], 0) / 4);
+        const avgG = Math.round(cornerColors.reduce((sum, color) => sum + color[1], 0) / 4);
+        const avgB = Math.round(cornerColors.reduce((sum, color) => sum + color[2], 0) / 4);
+        return [avgR, avgG, avgB];
+    }
+    
+    // Step 4: Fall back to existing border sampling logic
     const colorCounts = new Map();
 
     // Sample pixels along the border (1-pixel width)
