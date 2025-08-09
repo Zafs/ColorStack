@@ -264,7 +264,7 @@ function getImpactfulColors(data, width, height, numColors) {
         // Calculate enhanced impact score with saliency weighting
         const saturation = getSaturation(r, g, b);
         const edginess = edgeData[pixelIndex] || 0;
-        const finalImpactScore = (1 + saturation * 2) * (1 + edginess) * (1 + saliencyWeight * 1.5);
+        const finalImpactScore = (1 + saturation * 2) * (1 + edginess * 3) * (1 + saliencyWeight * 1.5);
         
         // Add to histogram
         if (colorHistogram.has(colorKey)) {
@@ -814,6 +814,57 @@ function processImage(appState, domElements) {
             }
         }
         bandMap[j] = bandIndex;
+    }
+
+    // Despeckle filter: Clean up noisy pixel assignments in the bandMap
+    const cleanedBandMap = new Float32Array(bandMap.length);
+    const width = appState.width;
+    const height = appState.height;
+    
+    // Copy the original bandMap to cleanedBandMap
+    for (let i = 0; i < bandMap.length; i++) {
+        cleanedBandMap[i] = bandMap[i];
+    }
+    
+    // Apply despeckle filter (skip 1-pixel border)
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            const pixelIndex = y * width + x;
+            const neighborhood = [];
+            
+            // Collect 3x3 neighborhood (8 neighbors + center) from original bandMap
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    const neighborIndex = (y + dy) * width + (x + dx);
+                    neighborhood.push(bandMap[neighborIndex]);
+                }
+            }
+            
+            // Count occurrences of each bandIndex in the neighborhood
+            const bandCounts = new Map();
+            for (const bandIndex of neighborhood) {
+                bandCounts.set(bandIndex, (bandCounts.get(bandIndex) || 0) + 1);
+            }
+            
+            // Find the most frequent bandIndex (majority)
+            let majorityBandIndex = bandMap[pixelIndex]; // Default to current pixel
+            let maxCount = 0;
+            
+            for (const [bandIndex, count] of bandCounts) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    majorityBandIndex = bandIndex;
+                }
+            }
+            
+            // Set the central pixel to the majority bandIndex
+            cleanedBandMap[pixelIndex] = majorityBandIndex;
+        }
+    }
+    
+    // Replace the original bandMap with the cleaned version
+    for (let i = 0; i < bandMap.length; i++) {
+        bandMap[i] = cleanedBandMap[i];
     }
 
     // Get the base color from the current palette (for rendering)

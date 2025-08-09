@@ -298,6 +298,25 @@ export function openCustomColorPicker(currentColor, onColorChange, isFilamentPic
 }
 
 export function renderMyFilaments(filaments, container, onRemove, onEdit = null) {
+    // Get the empty state element
+    const emptyStateElement = document.getElementById('myFilamentsEmptyState');
+    
+    // Check if filaments array is empty
+    if (filaments.length === 0) {
+        // Show empty state and hide the list
+        if (emptyStateElement) {
+            emptyStateElement.classList.remove('hidden');
+        }
+        container.classList.add('hidden');
+        return;
+    } else {
+        // Hide empty state and show the list
+        if (emptyStateElement) {
+            emptyStateElement.classList.add('hidden');
+        }
+        container.classList.remove('hidden');
+    }
+    
     container.innerHTML = '';
     filaments.forEach((filament, index) => {
         // Create main filament card container

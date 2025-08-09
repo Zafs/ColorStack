@@ -777,7 +777,7 @@
 </div>
 </div>
 <div class="flex items-center gap-4">
-<input id="numBands" class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-track" max="8" min="2" type="range" value="4"/>
+<input id="numBands" class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-track" max="16" min="2" type="range" value="4"/>
 <span id="numBandsValue" class="font-semibold text-white">4</span>
 </div>
 </div>
@@ -850,6 +850,11 @@
 </div>
 <div id="myFilamentsList" class="grid grid-cols-3 sm:grid-cols-4 gap-4">
 <!-- My filaments will be dynamically generated here -->
+</div>
+<div id="myFilamentsEmptyState" class="hidden text-center text-gray-500 py-8">
+    <span class="material-icons text-4xl mb-2">inventory_2</span>
+    <p class="text-sm">Your saved filaments will appear here.</p>
+    <p class="text-xs">Click "Add New" to get started!</p>
 </div>
 </div>
 </aside>

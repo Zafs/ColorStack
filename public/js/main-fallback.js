@@ -410,6 +410,25 @@
     }
 
     function renderMyFilaments(filaments, container, onRemove, editCallback) {
+        // Get the empty state element
+        const emptyStateElement = document.getElementById('myFilamentsEmptyState');
+        
+        // Check if filaments array is empty
+        if (filaments.length === 0) {
+            // Show empty state and hide the list
+            if (emptyStateElement) {
+                emptyStateElement.classList.remove('hidden');
+            }
+            container.classList.add('hidden');
+            return;
+        } else {
+            // Hide empty state and show the list
+            if (emptyStateElement) {
+                emptyStateElement.classList.add('hidden');
+            }
+            container.classList.remove('hidden');
+        }
+        
         container.innerHTML = '';
         for (let i = 0; i < filaments.length; i++) {
             const filament = filaments[i];
@@ -972,7 +991,7 @@
             context.drawImage(img, 0, 0, img.width, img.height);
 
             let numBands = parseInt(numBandsInput.value, 10);
-            if (isNaN(numBands) || numBands < 2 || numBands > 8) {
+            if (isNaN(numBands) || numBands < 2 || numBands > 16) {
                 numBands = 4;
                 numBandsInput.value = 4;
             }
@@ -1125,6 +1144,10 @@
             });
 
             loadMyFilaments();
+            
+            // Immediately render the filaments to show either the saved list or the new empty state
+            renderMyFilaments(appState.myFilaments, domElements.myFilamentsList, removeFilament, openFilamentModal);
+            
             hideHeaderButtons(domElements);
             setupEventListeners();
         } catch (error) {
